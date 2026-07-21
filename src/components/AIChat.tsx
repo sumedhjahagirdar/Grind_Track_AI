@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { sendChatMessage, fetchChatMessages } from '../lib/api'
+import { sendChatMessage, fetchChatMessages, clearChatMessages } from '../lib/api'
 import type { ChatMessage } from '../lib/types'
 import { Send, Loader2, Trash2, Sparkles } from 'lucide-react'
 import { format } from 'date-fns'
 import clsx from 'clsx'
+import FormattedMessage from './FormattedMessage'
 
 const QUICK_PROMPTS = [
   'What should I practice today?',
@@ -17,6 +18,7 @@ export default function AIChat() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [clearing, setClearing] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
@@ -77,6 +79,21 @@ export default function AIChat() {
     setLoading(false)
   }
 
+  const handleClear = async () => {
+    if (clearing || loading) return
+    if (!confirm('Clear the entire AI Coach conversation? This cannot be undone.')) return
+    setClearing(true)
+    try {
+      await clearChatMessages()
+      setMessages([])
+      setError(null)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setClearing(false)
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -91,7 +108,18 @@ export default function AIChat() {
           <Sparkles className="h-4 w-4 text-brand-600" />
           AI Coach
         </h2>
-        <span className="text-[11px] text-ink-400">Powered by Gemini</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] text-ink-400">Powered by Gemini</span>
+          <button
+            onClick={handleClear}
+            disabled={clearing || loading || messages.length === 0}
+            title="Clear chat"
+            className="flex items-center gap-1 text-xs text-ink-400 hover:text-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition"
+          >
+            {clearing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+            Clear
+          </button>
+        </div>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
@@ -124,7 +152,11 @@ export default function AIChat() {
                 ? 'bg-brand-600 text-white rounded-br-md'
                 : 'bg-ink-50 text-ink-800 rounded-bl-md border border-ink-100'
             )}>
-              <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+              {m.role === 'assistant' ? (
+                <FormattedMessage content={m.content} />
+              ) : (
+                <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+              )}
               {m.created_at && !m.id.startsWith('temp') && (
                 <p className={clsx('text-[10px] mt-1', m.role === 'user' ? 'text-brand-100' : 'text-ink-400')}>
                   {format(new Date(m.created_at), 'MMM d, h:mm a')}
