@@ -10,33 +10,108 @@ html, body, #root {
   height: 100%;
 }
 
+html {
+  /* Bumps the rem base so Tailwind's rem-driven text-sm/text-base/etc.
+     land at a genuinely comfortable 16-18px reading size app-wide,
+     without having to touch every text-* class on every page. */
+  font-size: 17px;
+  scroll-behavior: smooth;
+}
+
+/* Themed scrollbars — default browser bars look out of place against the
+   glass/aurora treatment. Falls back silently in browsers without
+   scrollbar-color/::-webkit-scrollbar support. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d5d9e2 transparent;
+}
+.dark * {
+  scrollbar-color: #3a4050 transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #d5d9e2;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #3a4050;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #b0b8c8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #525c73;
+}
+
 body {
   @apply bg-ink-50 text-ink-900 antialiased dark:bg-ink-950 dark:text-ink-100;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  transition: background-color 0.15s ease, color 0.15s ease;
+  line-height: 1.6;
+}
+
+/* Smooth, flicker-free light/dark toggle: every element cross-fades its
+   colors instead of snapping. Deliberately limited to color-family
+   properties (cheap, no layout impact) — never transform/layout, so this
+   can't cause jank. prefers-reduced-motion below collapses it to instant. */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow, fill, stroke;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Gradient text utility for names/titles/emphasis, per the brand accent pair. */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-brand-500 to-glow-500;
 }
 
 @layer components {
   .card {
-    @apply bg-white rounded-2xl shadow-card border border-ink-100 dark:bg-ink-900 dark:border-ink-800;
+    @apply bg-white rounded-2xl shadow-card border border-ink-100
+      dark:bg-ink-900/70 dark:backdrop-blur-xl dark:border-ink-700/60;
+  }
+  .card-glass {
+    @apply rounded-2xl border backdrop-blur-xl transition-all duration-300
+      bg-white/70 border-ink-200/60 shadow-card
+      dark:bg-white/[0.04] dark:border-white/10 dark:shadow-none;
   }
   .card-hover {
-    @apply transition-shadow duration-200 hover:shadow-card-hover;
+    @apply transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-card-hover dark:hover:shadow-glow-brand;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
+      transition-all duration-[250ms] ease-out disabled:opacity-50 disabled:cursor-not-allowed active:scale-[.97];
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700 active:scale-[.98];
+    @apply btn text-white bg-gradient-to-r from-brand-600 to-brand-500 bg-[length:160%_100%] bg-left
+      hover:bg-right hover:shadow-glow-brand;
+    transition-property: background-position, box-shadow, transform;
+    transition-duration: 350ms, 250ms, 150ms;
   }
   .btn-ghost {
-    @apply btn text-ink-700 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800;
+    @apply btn text-ink-700 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-white/10;
   }
   .btn-outline {
-    @apply btn border border-ink-200 text-ink-800 hover:bg-ink-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800;
+    @apply btn border border-ink-200 text-ink-800 hover:bg-ink-50 hover:border-brand-400
+      dark:border-ink-700 dark:text-ink-200 dark:hover:bg-white/10 dark:hover:border-brand-500/60;
   }
   .input {
-    @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder-ink-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition dark:bg-ink-900 dark:border-ink-700 dark:text-ink-100 dark:placeholder-ink-500;
+    @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder-ink-400
+      focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all duration-200
+      dark:bg-ink-900 dark:border-ink-700 dark:text-ink-100 dark:placeholder-ink-500
+      dark:focus:ring-brand-400/25 dark:focus:shadow-glow-brand;
   }
   .label {
     @apply block text-xs font-semibold text-ink-600 mb-1.5 uppercase tracking-wide dark:text-ink-400;
@@ -44,14 +119,83 @@ body {
   .chip {
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
+  .icon-interactive {
+    @apply transition-all duration-200 ease-out group-hover:scale-110 group-hover:drop-shadow-[0_0_6px_rgba(25,168,116,0.5)];
+  }
+  .skeleton {
+    @apply relative overflow-hidden bg-ink-100 dark:bg-ink-800 rounded-lg;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: shimmer 1.6s infinite;
+    transform: translateX(-100%);
+  }
+  .dark .skeleton::after {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  }
 }
 
-/* Safety-net overrides: several pages set text-ink-900/800/700 directly
-   (not just via the shared .card/.btn/.input classes above) for what was
-   originally light-mode-only "dark text on light background" styling.
-   Rather than hand-auditing every page in one pass, this ensures those
-   elements stay readable once dark mode is on. Can be removed page-by-page
-   as each page gets proper dark: variants added directly. */
-.dark [class*="text-ink-900"] { color: #f1f2f6; }
-.dark [class*="text-ink-800"] { color: #e3e5eb; }
-.dark [class*="text-ink-700"] { color: #cdd1db; }
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Scroll-reveal primitive (paired with the useReveal hook) — transform/opacity
+   only, so it stays GPU-accelerated and cheap. */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Aurora background: a few soft, slow-drifting glow blobs behind the app
+   shell, in both themes — light mode gets a much softer version (barely-
+   there tint) so it still feels alive without competing with readability. */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.07;
+  will-change: transform;
+}
+.dark .aurora-blob {
+  opacity: 0.22;
+}
+
+/* Respect reduced-motion: kill all decorative motion, keep the app fully usable. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Safety-net contrast overrides: several pages set text-ink-900/800/700/600
+   directly (not just via the shared .card/.btn/.input classes above), for
+   what was originally light-mode-only "dark text on light background"
+   styling. These hit real WCAG AA contrast on the dark background
+   (#13161f) rather than the previous approximations. Can be removed
+   page-by-page as each page gets proper dark: variants added directly. */
+.dark [class*="text-ink-900"] { color: #F1F1F1; }
+.dark [class*="text-ink-800"] { color: #F1F1F1; }
+.dark [class*="text-ink-700"] { color: #E5E5E5; }
+.dark [class*="text-ink-600"] { color: #C7CBD6; }
+.dark [class*="text-ink-500"] { color: #A6ACBC; }

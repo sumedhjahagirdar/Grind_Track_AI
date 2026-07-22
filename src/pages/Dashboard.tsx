@@ -7,6 +7,7 @@ import {
 import type { DailyLog, Recommendation, RecommendationPayload } from '../lib/types'
 import LogInput from '../components/LogInput'
 import TodayTasks from '../components/TodayTasks'
+import Reveal from '../components/Reveal'
 import RecommendationCard from '../components/RecommendationCard'
 import AIChat from '../components/AIChat'
 import { Flame, TrendingUp, Target, Calendar, RefreshCw, Loader2 } from 'lucide-react'
@@ -84,10 +85,10 @@ export default function Dashboard() {
   const weekProgress = weekTargets ? Math.min(100, Math.round((weekTotal / (weekTargets.easy + weekTargets.medium + weekTargets.hard || 1)) * 100)) : 0
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 md:px-10 py-8 md:py-12 space-y-8 md:space-y-10">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink-900">Dashboard</h1>
+          <h1 className="text-2xl font-display font-bold text-ink-900">Dashboard</h1>
           <p className="text-sm text-ink-500">{format(now, 'EEEE, MMMM d, yyyy')}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -109,10 +110,10 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="This week" value={weekTotal} sub={`${weekEasy}E / ${weekMedium}M / ${weekHard}H`} icon={<Target className="h-4 w-4" />} />
-        <StatCard label="All-time solved" value={allTimeEasy + allTimeMedium + allTimeHard} sub={`${allTimeEasy}E / ${allTimeMedium}M / ${allTimeHard}H`} icon={<TrendingUp className="h-4 w-4" />} />
-        <StatCard label="Day streak" value={streak} sub={streak > 0 ? 'Keep it up!' : 'Log today to start'} icon={<Flame className="h-4 w-4" />} />
-        <StatCard label="Logs total" value={logs.length} sub="entries logged" icon={<Calendar className="h-4 w-4" />} />
+        <StatCard label="This week" value={weekTotal} sub={`${weekEasy}E / ${weekMedium}M / ${weekHard}H`} icon={<Target className="h-4 w-4" />} delay={0} />
+        <StatCard label="All-time solved" value={allTimeEasy + allTimeMedium + allTimeHard} sub={`${allTimeEasy}E / ${allTimeMedium}M / ${allTimeHard}H`} icon={<TrendingUp className="h-4 w-4" />} delay={60} />
+        <StatCard label="Day streak" value={streak} sub={streak > 0 ? 'Keep it up!' : 'Log today to start'} icon={<Flame className="h-4 w-4" />} delay={120} />
+        <StatCard label="Logs total" value={logs.length} sub="entries logged" icon={<Calendar className="h-4 w-4" />} delay={180} />
       </div>
 
       {weekTargets && (
@@ -140,20 +141,28 @@ export default function Dashboard() {
 
       <AIChat />
 
-      {loading && <div className="text-center text-ink-400 text-sm">Loading…</div>}
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton h-[86px]" />
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
 
-function StatCard({ label, value, sub, icon }: { label: string; value: number; sub: string; icon: React.ReactNode }) {
+function StatCard({ label, value, sub, icon, delay = 0 }: { label: string; value: number; sub: string; icon: React.ReactNode; delay?: number }) {
   return (
-    <div className="card p-4">
-      <div className="flex items-center gap-2 text-ink-400 mb-1">
-        {icon}
-        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+    <Reveal delay={delay}>
+      <div className="card card-hover group p-4">
+        <div className="flex items-center gap-2 text-ink-400 mb-1">
+          <span className="icon-interactive">{icon}</span>
+          <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+        </div>
+        <div className="text-2xl font-display font-bold text-gradient">{value}</div>
+        <div className="text-xs text-ink-500 mt-0.5">{sub}</div>
       </div>
-      <div className="text-2xl font-bold text-ink-900">{value}</div>
-      <div className="text-xs text-ink-500 mt-0.5">{sub}</div>
-    </div>
+    </Reveal>
   )
 }

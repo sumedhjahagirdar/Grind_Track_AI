@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
+import Reveal from '../components/Reveal'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -34,14 +35,17 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-ink-50 via-white to-brand-50 dark:from-ink-950 dark:via-ink-950 dark:to-ink-900">
       <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white font-bold">GT</div>
-          <div>
-            <h1 className="text-xl font-bold text-ink-900">GrindTrack AI</h1>
-            <p className="text-xs text-ink-500">Your private DSA progress tracker</p>
+        <Reveal>
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-glow-500 text-white font-bold shadow-glow-brand">GT</div>
+            <div>
+              <h1 className="text-xl font-display font-bold text-gradient">GrindTrack AI</h1>
+              <p className="text-xs text-ink-500">Your private DSA progress tracker</p>
+            </div>
           </div>
-        </div>
+        </Reveal>
 
+        <Reveal delay={100}>
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
           <div>
             <label className="label">Email</label>
@@ -86,6 +90,7 @@ export default function Login() {
             {signupMode ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
           </button>
         </form>
+        </Reveal>
 
         <p className="mt-6 text-center text-[11px] text-ink-400 leading-relaxed">
           Single-user app. Your data is private to your account.

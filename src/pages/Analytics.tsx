@@ -167,7 +167,7 @@ export default function Analytics() {
   const latestCf = cfSnapshots[cfSnapshots.length - 1]
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 md:px-10 py-8 md:py-12 space-y-8 md:space-y-10">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-ink-900">Analytics</h1>

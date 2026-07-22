@@ -101,7 +101,7 @@ export default function SettingsPage() {
   if (loading) return <div className="flex h-64 items-center justify-center text-ink-400"><Loader2 className="h-5 w-5 animate-spin" /></div>
 
   return (
-    <div className="max-w-2xl mx-auto px-4 md:px-8 py-6 md:py-8 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 md:px-10 py-8 md:py-12 space-y-8 md:space-y-10">
       <div>
         <h1 className="text-2xl font-bold text-ink-900">Settings</h1>
         <p className="text-sm text-ink-500">Configure your tracker and export your data</p>

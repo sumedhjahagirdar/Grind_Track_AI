@@ -6,6 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
@@ -39,10 +40,33 @@ export default {
           500: '#f59e0b',
           600: '#d97706',
         },
+        glow: {
+          400: '#7c9cff',
+          500: '#6d5efc',
+          600: '#5745e0',
+        },
       },
       boxShadow: {
         card: '0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.06)',
         'card-hover': '0 2px 4px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.10)',
+        'glow-brand': '0 0 0 1px rgba(25,168,116,0.4), 0 0 24px rgba(25,168,116,0.25)',
+        'glow-violet': '0 0 0 1px rgba(109,94,252,0.4), 0 0 24px rgba(109,94,252,0.25)',
+      },
+      keyframes: {
+        aurora: {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '33%': { transform: 'translate(4%, -6%) scale(1.08)' },
+          '66%': { transform: 'translate(-3%, 4%) scale(0.96)' },
+        },
+        'fade-up': {
+          from: { opacity: '0', transform: 'translateY(16px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        aurora1: 'aurora 22s ease-in-out infinite',
+        aurora2: 'aurora 28s ease-in-out infinite reverse',
+        'fade-up': 'fade-up 0.5s ease-out both',
       },
     },
   },
