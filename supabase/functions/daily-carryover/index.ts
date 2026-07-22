@@ -42,20 +42,16 @@ Deno.serve(async (req: Request) => {
     if (fetchErr) return jsonError(500, `Failed to fetch stale tasks: ${fetchErr.message}`);
 
     const tasks = staleTasks ?? [];
-    if (tasks.length === 0) {
-      return new Response(JSON.stringify({
-        carried_over_count: 0,
-        missed_days: 0,
-        message: null,
-      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
 
     // Determine the span of missed days (min original or scheduled date -> today)
-    const dates = tasks.map((t) => t.original_date ?? t.scheduled_date).sort();
-    const earliest = dates[0];
-    const missedDays = Math.max(1, Math.round(
-      (new Date(today).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24),
-    ));
+    let missedDays = 0;
+    if (tasks.length > 0) {
+      const dates = tasks.map((t) => t.original_date ?? t.scheduled_date).sort();
+      const earliest = dates[0];
+      missedDays = Math.max(1, Math.round(
+        (new Date(today).getTime() - new Date(earliest).getTime()) / (1000 * 60 * 60 * 24),
+      ));
+    }
 
     // Roll each stale task forward to today, preserving the original_date.
     const updates = tasks.map((t) => {
@@ -81,12 +77,53 @@ Deno.serve(async (req: Request) => {
       if (!error) updated++;
     }
 
-    const message = updated > 0
-      ? `Plan adjusted — ${updated} task${updated === 1 ? "" : "s"} from ${missedDays} missed day${missedDays === 1 ? "" : "s"} carried forward to today.`
-      : null;
+    // --- Cap "Today" at MAX_TODAY_TASKS ---
+    // After carrying stale tasks forward, "Today" can balloon (e.g. 3 missed days
+    // of tasks all landing on today). Keep it manageable: prioritize the most
+    // overdue tasks (they've been waiting longest), keep only the cap, and
+    // reallocate the overflow to Tomorrow instead of dumping it all on today.
+    const MAX_TODAY_TASKS = 6;
+    let reallocated = 0;
+
+    const { data: todayNow, error: todayErr } = await dataClient
+      .from("plan_tasks")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("kind", "today")
+      .lte("scheduled_date", today)
+      .neq("status", "completed");
+
+    if (!todayErr && todayNow && todayNow.length > MAX_TODAY_TASKS) {
+      // Oldest original_date (or scheduled_date if never carried) = most overdue = highest priority to keep today.
+      const sorted = [...todayNow].sort((a, b) => {
+        const da = a.original_date ?? a.scheduled_date;
+        const db = b.original_date ?? b.scheduled_date;
+        return da < db ? -1 : da > db ? 1 : 0;
+      });
+      const overflow = sorted.slice(MAX_TODAY_TASKS);
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+      for (const t of overflow) {
+        const { error } = await dataClient
+          .from("plan_tasks")
+          .update({ kind: "tomorrow", scheduled_date: tomorrow })
+          .eq("id", t.id);
+        if (!error) reallocated++;
+      }
+    }
+
+    const parts: string[] = [];
+    if (updated > 0) {
+      parts.push(`${updated} task${updated === 1 ? "" : "s"} from ${missedDays} missed day${missedDays === 1 ? "" : "s"} carried forward to today`);
+    }
+    if (reallocated > 0) {
+      parts.push(`${reallocated} task${reallocated === 1 ? "" : "s"} moved to tomorrow to keep today manageable (max ${MAX_TODAY_TASKS}/day)`);
+    }
+    const message = parts.length > 0 ? `Plan adjusted — ${parts.join("; ")}.` : null;
 
     return new Response(JSON.stringify({
       carried_over_count: updated,
+      reallocated_count: reallocated,
       missed_days: missedDays,
       message,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

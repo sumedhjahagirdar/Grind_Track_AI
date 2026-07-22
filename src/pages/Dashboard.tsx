@@ -6,6 +6,7 @@ import {
 } from '../lib/api'
 import type { DailyLog, Recommendation, RecommendationPayload } from '../lib/types'
 import LogInput from '../components/LogInput'
+import TodayTasks from '../components/TodayTasks'
 import RecommendationCard from '../components/RecommendationCard'
 import AIChat from '../components/AIChat'
 import { Flame, TrendingUp, Target, Calendar, RefreshCw, Loader2 } from 'lucide-react'
@@ -130,7 +131,10 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <LogInput onSaved={handleSaved} existingLogs={logs} />
+        <div className="space-y-6">
+          <LogInput onSaved={handleSaved} existingLogs={logs} />
+          <TodayTasks />
+        </div>
         <RecommendationCard rec={payload} generatedAt={rec?.generated_at} regenerating={regenerating} onRegenerate={handleRegenerate} />
       </div>
 
