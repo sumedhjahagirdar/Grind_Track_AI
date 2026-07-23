@@ -105,8 +105,8 @@ export default function LogInput({ onSaved, existingLogs }: Props) {
             placeholder="Today I solved 3 easy and 4 medium LeetCode questions on Arrays and Strings. Started learning DSA from a YouTube channel, watched 2 videos on recursion. Felt Sliding Window was tough."
             disabled={loading}
           />
-          {error && <div className="mt-2 rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-sm text-red-700">{error}</div>}
-          {parseWarning && !error && <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">{parseWarning}</div>}
+          {error && <div className="mt-2 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-800/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">{error}</div>}
+          {parseWarning && !error && <div className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">{parseWarning}</div>}
           <button onClick={handleChatSubmit} disabled={loading || !text.trim()} className="btn-primary mt-3 w-full">
             {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Parsing with AI…</> : <><Send className="h-4 w-4" /> Log it</>}
           </button>
@@ -146,8 +146,8 @@ export default function LogInput({ onSaved, existingLogs }: Props) {
             <label className="label">Notes</label>
             <textarea value={fNotes} onChange={(e) => setFNotes(e.target.value)} rows={2} className="input resize-none" />
           </div>
-          {error && <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-sm text-red-700">{error}</div>}
-          {parseWarning && !error && <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">{parseWarning}</div>}
+          {error && <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-800/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">{error}</div>}
+          {parseWarning && !error && <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">{parseWarning}</div>}
           <button type="submit" disabled={loading} className="btn-primary w-full">
             {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <><FileText className="h-4 w-4" /> Save entry</>}
           </button>

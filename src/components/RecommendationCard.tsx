@@ -44,12 +44,12 @@ export default function RecommendationCard({ rec, generatedAt, regenerating, onR
             color="emerald"
           >
             <div className="flex gap-2 mb-2 text-xs">
-              <span className="chip bg-emerald-100 text-emerald-800">Easy: {rec.tomorrow.leetcode_targets.easy}</span>
-              <span className="chip bg-emerald-100 text-emerald-800">Medium: {rec.tomorrow.leetcode_targets.medium}</span>
-              <span className="chip bg-emerald-100 text-emerald-800">Hard: {rec.tomorrow.leetcode_targets.hard}</span>
+              <span className={`chip ${STICKY_COLORS.emerald.chip}`}>Easy: {rec.tomorrow.leetcode_targets.easy}</span>
+              <span className={`chip ${STICKY_COLORS.emerald.chip}`}>Medium: {rec.tomorrow.leetcode_targets.medium}</span>
+              <span className={`chip ${STICKY_COLORS.emerald.chip}`}>Hard: {rec.tomorrow.leetcode_targets.hard}</span>
             </div>
-            {rec.tomorrow.topics_to_practice?.length > 0 && <BulletList items={rec.tomorrow.topics_to_practice} label="Practice" />}
-            {rec.tomorrow.learning_tasks?.length > 0 && <BulletList items={rec.tomorrow.learning_tasks} label="Learn" />}
+            {rec.tomorrow.topics_to_practice?.length > 0 && <BulletList items={rec.tomorrow.topics_to_practice} label="Practice" color="emerald" />}
+            {rec.tomorrow.learning_tasks?.length > 0 && <BulletList items={rec.tomorrow.learning_tasks} label="Learn" color="emerald" />}
           </StickyNoteCard>
 
           {/* This Week — amber sticky */}
@@ -59,13 +59,13 @@ export default function RecommendationCard({ rec, generatedAt, regenerating, onR
             rotate="1"
             color="amber"
           >
-            {rec.this_week.topics_to_finish?.length > 0 && <BulletList items={rec.this_week.topics_to_finish} label="Finish" />}
+            {rec.this_week.topics_to_finish?.length > 0 && <BulletList items={rec.this_week.topics_to_finish} label="Finish" color="amber" />}
             <div className="flex gap-2 text-xs mt-1">
-              <span className="chip bg-amber-100 text-amber-800">Target: {rec.this_week.question_targets.easy}E / {rec.this_week.question_targets.medium}M / {rec.this_week.question_targets.hard}H</span>
+              <span className={`chip ${STICKY_COLORS.amber.chip}`}>Target: {rec.this_week.question_targets.easy}E / {rec.this_week.question_targets.medium}M / {rec.this_week.question_targets.hard}H</span>
             </div>
             {rec.this_week.milestone && (
-              <div className="mt-2 text-sm text-ink-800 bg-amber-50/80 border border-amber-300/40 rounded-lg px-3 py-2">
-                <strong className="text-amber-700">Milestone:</strong> {rec.this_week.milestone}
+              <div className="mt-2 text-sm bg-amber-100/70 dark:bg-amber-900/30 border border-amber-300/40 dark:border-amber-700/40 rounded-lg px-3 py-2 text-amber-900 dark:text-amber-100">
+                <strong className="text-amber-700 dark:text-amber-300">Milestone:</strong> {rec.this_week.milestone}
               </div>
             )}
           </StickyNoteCard>
@@ -77,7 +77,7 @@ export default function RecommendationCard({ rec, generatedAt, regenerating, onR
             rotate="-0.5"
             color="sky"
           >
-            {rec.this_month.roadmap?.length > 0 && <BulletList items={rec.this_month.roadmap} />}
+            {rec.this_month.roadmap?.length > 0 && <BulletList items={rec.this_month.roadmap} color="sky" />}
             <div className="mt-2">
               <span className={`chip ${readinessColor(rec.this_month.estimated_readiness)}`}>
                 Readiness: {rec.this_month.estimated_readiness}
@@ -96,9 +96,9 @@ export default function RecommendationCard({ rec, generatedAt, regenerating, onR
             >
               {rec.weak_areas?.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {rec.weak_areas.map((w, i) => <span key={i} className="chip bg-rose-100 text-rose-800">{w}</span>)}
+                  {rec.weak_areas.map((w, i) => <span key={i} className={`chip ${STICKY_COLORS.rose.chip}`}>{w}</span>)}
                 </div>
-              ) : <span className="text-xs text-ink-500">None identified yet</span>}
+              ) : <span className={`text-xs ${STICKY_COLORS.rose.secondary}`}>None identified yet</span>}
             </StickyNoteCard>
             <StickyNoteCard
               icon={<CheckCircle2 className="h-4 w-4" />}
@@ -109,9 +109,9 @@ export default function RecommendationCard({ rec, generatedAt, regenerating, onR
             >
               {rec.strengths?.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {rec.strengths.map((s, i) => <span key={i} className="chip bg-emerald-100 text-emerald-800">{s}</span>)}
+                  {rec.strengths.map((s, i) => <span key={i} className={`chip ${STICKY_COLORS.emerald.chip}`}>{s}</span>)}
                 </div>
-              ) : <span className="text-xs text-ink-500">Log more to identify</span>}
+              ) : <span className={`text-xs ${STICKY_COLORS.emerald.secondary}`}>Log more to identify</span>}
             </StickyNoteCard>
           </div>
 
@@ -125,9 +125,9 @@ export default function RecommendationCard({ rec, generatedAt, regenerating, onR
             >
               <div className="space-y-1.5">
                 {rec.suggested_resources.map((r, i) => (
-                  <div key={i} className="text-sm text-ink-800">
+                  <div key={i} className={`text-sm ${STICKY_COLORS.violet.body}`}>
                     <span className="font-medium">{r.topic}</span>{' '}
-                    <span className="text-ink-500">({r.type})</span>{' '}
+                    <span className={STICKY_COLORS.violet.secondary}>({r.type})</span>{' '}
                     — {r.suggestion}
                   </div>
                 ))}
@@ -142,39 +142,64 @@ export default function RecommendationCard({ rec, generatedAt, regenerating, onR
 
 const STICKY_COLORS = {
   emerald: {
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-300/50',
-    header: 'text-emerald-800',
-    iconBg: 'bg-emerald-200/70 text-emerald-800',
-    tape: 'bg-emerald-300/40',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    border: 'border-emerald-300/50 dark:border-emerald-700/50',
+    header: 'text-emerald-800 dark:text-emerald-300',
+    iconBg: 'bg-emerald-200/70 text-emerald-800 dark:bg-emerald-800/50 dark:text-emerald-200',
+    tape: 'bg-emerald-300/40 dark:bg-emerald-700/40',
+    body: 'text-emerald-900 dark:text-emerald-100',
+    bullet: 'text-emerald-500 dark:text-emerald-400',
+    label: 'text-emerald-700/80 dark:text-emerald-400',
+    secondary: 'text-emerald-700/70 dark:text-emerald-400',
+    chip: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800/50 dark:text-emerald-200',
   },
   amber: {
-    bg: 'bg-amber-50',
-    border: 'border-amber-300/50',
-    header: 'text-amber-800',
-    iconBg: 'bg-amber-200/70 text-amber-800',
-    tape: 'bg-amber-300/40',
+    bg: 'bg-amber-50 dark:bg-amber-950/40',
+    border: 'border-amber-300/50 dark:border-amber-700/50',
+    header: 'text-amber-800 dark:text-amber-300',
+    iconBg: 'bg-amber-200/70 text-amber-800 dark:bg-amber-800/50 dark:text-amber-200',
+    tape: 'bg-amber-300/40 dark:bg-amber-700/40',
+    body: 'text-amber-900 dark:text-amber-100',
+    bullet: 'text-amber-500 dark:text-amber-400',
+    label: 'text-amber-700/80 dark:text-amber-400',
+    secondary: 'text-amber-700/70 dark:text-amber-400',
+    chip: 'bg-amber-100 text-amber-800 dark:bg-amber-800/50 dark:text-amber-200',
   },
   sky: {
-    bg: 'bg-sky-50',
-    border: 'border-sky-300/50',
-    header: 'text-sky-800',
-    iconBg: 'bg-sky-200/70 text-sky-800',
-    tape: 'bg-sky-300/40',
+    bg: 'bg-sky-50 dark:bg-sky-950/40',
+    border: 'border-sky-300/50 dark:border-sky-700/50',
+    header: 'text-sky-800 dark:text-sky-300',
+    iconBg: 'bg-sky-200/70 text-sky-800 dark:bg-sky-800/50 dark:text-sky-200',
+    tape: 'bg-sky-300/40 dark:bg-sky-700/40',
+    body: 'text-sky-900 dark:text-sky-100',
+    bullet: 'text-sky-500 dark:text-sky-400',
+    label: 'text-sky-700/80 dark:text-sky-400',
+    secondary: 'text-sky-700/70 dark:text-sky-400',
+    chip: 'bg-sky-100 text-sky-800 dark:bg-sky-800/50 dark:text-sky-200',
   },
   rose: {
-    bg: 'bg-rose-50',
-    border: 'border-rose-300/50',
-    header: 'text-rose-800',
-    iconBg: 'bg-rose-200/70 text-rose-800',
-    tape: 'bg-rose-300/40',
+    bg: 'bg-rose-50 dark:bg-rose-950/40',
+    border: 'border-rose-300/50 dark:border-rose-700/50',
+    header: 'text-rose-800 dark:text-rose-300',
+    iconBg: 'bg-rose-200/70 text-rose-800 dark:bg-rose-800/50 dark:text-rose-200',
+    tape: 'bg-rose-300/40 dark:bg-rose-700/40',
+    body: 'text-rose-900 dark:text-rose-100',
+    bullet: 'text-rose-500 dark:text-rose-400',
+    label: 'text-rose-700/80 dark:text-rose-400',
+    secondary: 'text-rose-700/70 dark:text-rose-400',
+    chip: 'bg-rose-100 text-rose-800 dark:bg-rose-800/50 dark:text-rose-200',
   },
   violet: {
-    bg: 'bg-violet-50',
-    border: 'border-violet-300/50',
-    header: 'text-violet-800',
-    iconBg: 'bg-violet-200/70 text-violet-800',
-    tape: 'bg-violet-300/40',
+    bg: 'bg-violet-50 dark:bg-violet-950/40',
+    border: 'border-violet-300/50 dark:border-violet-700/50',
+    header: 'text-violet-800 dark:text-violet-300',
+    iconBg: 'bg-violet-200/70 text-violet-800 dark:bg-violet-800/50 dark:text-violet-200',
+    tape: 'bg-violet-300/40 dark:bg-violet-700/40',
+    body: 'text-violet-900 dark:text-violet-100',
+    bullet: 'text-violet-500 dark:text-violet-400',
+    label: 'text-violet-700/80 dark:text-violet-400',
+    secondary: 'text-violet-700/70 dark:text-violet-400',
+    chip: 'bg-violet-100 text-violet-800 dark:bg-violet-800/50 dark:text-violet-200',
   },
 } as const
 
@@ -191,7 +216,7 @@ function StickyNoteCard({
   const c = STICKY_COLORS[color]
   return (
     <div
-      className={`relative ${c.bg} ${c.border} border rounded-lg ${compact ? 'p-3' : 'p-4'} shadow-card transition-transform duration-200 hover:rotate-0 hover:scale-[1.02] hover:shadow-card-hover`}
+      className={`relative ${c.bg} ${c.border} border rounded-lg ${compact ? 'p-3' : 'p-4'} shadow-card transition-transform duration-200 hover:rotate-0 hover:scale-[1.02] hover:shadow-card-hover ${c.body}`}
       style={{ transform: `rotate(${rotate}deg)` }}
     >
       {/* tape effect */}
@@ -205,14 +230,15 @@ function StickyNoteCard({
   )
 }
 
-function BulletList({ items, label }: { items: string[]; label?: string }) {
+function BulletList({ items, label, color }: { items: string[]; label?: string; color: keyof typeof STICKY_COLORS }) {
+  const c = STICKY_COLORS[color]
   return (
     <div>
-      {label && <div className="text-[11px] text-ink-500 uppercase tracking-wide mb-1">{label}</div>}
+      {label && <div className={`text-[11px] uppercase tracking-wide mb-1 ${c.label}`}>{label}</div>}
       <ul className="space-y-1">
         {items.map((it, i) => (
-          <li key={i} className="text-sm text-ink-800 flex gap-2">
-            <span className="text-ink-400 mt-0.5">•</span>
+          <li key={i} className={`text-sm flex gap-2 ${c.body}`}>
+            <span className={`mt-0.5 ${c.bullet}`}>•</span>
             <span>{it}</span>
           </li>
         ))}
@@ -223,7 +249,7 @@ function BulletList({ items, label }: { items: string[]; label?: string }) {
 
 function readinessColor(s: string): string {
   const v = (s || '').toLowerCase()
-  if (v.includes('ahead') || v.includes('on track')) return 'bg-emerald-100 text-emerald-800'
-  if (v.includes('behind') || v.includes('at risk')) return 'bg-rose-100 text-rose-800'
-  return 'bg-ink-100 text-ink-700'
+  if (v.includes('ahead') || v.includes('on track')) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800/50 dark:text-emerald-200'
+  if (v.includes('behind') || v.includes('at risk')) return 'bg-rose-100 text-rose-800 dark:bg-rose-800/50 dark:text-rose-200'
+  return 'bg-ink-100 text-ink-700 dark:bg-ink-800 dark:text-ink-200'
 }

@@ -147,14 +147,14 @@ export default function History() {
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="flex gap-1.5">
                           {l.easy_solved > 0 && <span className="chip bg-brand-50 text-brand-700">{l.easy_solved} easy</span>}
-                          {l.medium_solved > 0 && <span className="chip bg-amber-50 text-amber-700">{l.medium_solved} medium</span>}
-                          {l.hard_solved > 0 && <span className="chip bg-red-50 text-red-700">{l.hard_solved} hard</span>}
+                          {l.medium_solved > 0 && <span className="chip bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">{l.medium_solved} medium</span>}
+                          {l.hard_solved > 0 && <span className="chip bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300">{l.hard_solved} hard</span>}
                         </div>
                         <div className="flex gap-1">
                           <button onClick={() => startEdit(l)} className="btn-ghost text-xs px-2 py-1.5">
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
-                          <button onClick={() => handleDelete(l.id)} className="btn-ghost text-xs px-2 py-1.5 text-red-500 hover:bg-red-50">
+                          <button onClick={() => handleDelete(l.id)} className="btn-ghost text-xs px-2 py-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40">
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>

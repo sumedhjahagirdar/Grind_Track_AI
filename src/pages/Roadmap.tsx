@@ -156,29 +156,29 @@ export default function Roadmap() {
       </div>
 
       {regenError && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 flex items-start gap-2">
+        <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <div>
             <div className="font-medium">Failed to generate plan</div>
-            <div className="text-xs mt-0.5 text-red-600">{regenError}</div>
+            <div className="text-xs mt-0.5 text-red-600 dark:text-red-400">{regenError}</div>
           </div>
         </div>
       )}
 
       {regenerating && (
-        <div className="rounded-lg bg-brand-50 border border-brand-200 px-4 py-3 text-sm text-brand-700 flex items-center gap-2">
+        <div className="rounded-lg bg-brand-50 dark:bg-brand-950/30 border border-brand-200 dark:border-brand-700/50 px-4 py-3 text-sm text-brand-700 dark:text-brand-300 flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           Generating your plan from the AI engine…
         </div>
       )}
 
       {carryMsg && (
-        <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 flex items-start gap-2">
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 px-4 py-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <div>
             <div className="font-medium">{carryMsg}</div>
             {missedDays > 1 && (
-              <div className="text-xs mt-0.5 text-amber-700">
+              <div className="text-xs mt-0.5 text-amber-700 dark:text-amber-400">
                 Weekly pace adjusted: {perDayPace} task{perDayPace === 1 ? '' : 's'}/day needed across {daysRemainingInWeek} remaining day{daysRemainingInWeek === 1 ? '' : 's'} to hit this week's target.
               </div>
             )}
@@ -313,16 +313,16 @@ function TaskSection({
   progress?: { completed: number; total: number; perDayPace: number }
 }) {
   const colors = {
-    brand: 'border-brand-200 bg-brand-50/30',
-    sky: 'border-sky-200 bg-sky-50/30',
-    amber: 'border-amber-200 bg-amber-50/30',
-    violet: 'border-violet-200 bg-violet-50/30',
+    brand: 'border-brand-200 dark:border-brand-700/60 bg-brand-50/30 dark:bg-brand-950/20',
+    sky: 'border-sky-200 dark:border-sky-700/60 bg-sky-50/30 dark:bg-sky-950/20',
+    amber: 'border-amber-200 dark:border-amber-700/60 bg-amber-50/30 dark:bg-amber-950/20',
+    violet: 'border-violet-200 dark:border-violet-700/60 bg-violet-50/30 dark:bg-violet-950/20',
   }
   const iconBg = {
-    brand: 'bg-brand-100 text-brand-700',
-    sky: 'bg-sky-100 text-sky-700',
-    amber: 'bg-amber-100 text-amber-700',
-    violet: 'bg-violet-100 text-violet-700',
+    brand: 'bg-brand-100 text-brand-700 dark:bg-brand-800/50 dark:text-brand-200',
+    sky: 'bg-sky-100 text-sky-700 dark:bg-sky-800/50 dark:text-sky-200',
+    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-800/50 dark:text-amber-200',
+    violet: 'bg-violet-100 text-violet-700 dark:bg-violet-800/50 dark:text-violet-200',
   }
   return (
     <div className={clsx('card p-4 border-l-4', colors[accent])}>
