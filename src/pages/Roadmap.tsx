@@ -201,7 +201,7 @@ export default function Roadmap() {
         <select
           value={newTask.kind}
           onChange={(e) => setNewTask({ ...newTask, kind: e.target.value as PlanKind })}
-          className="text-xs border border-ink-200 rounded-md px-2 py-1.5 bg-white text-ink-700 focus:outline-none focus:border-brand-500"
+          className="text-xs border border-ink-200 dark:border-ink-700 rounded-md px-2 py-1.5 bg-white dark:bg-ink-900 text-ink-700 dark:text-ink-100 focus:outline-none focus:border-brand-500"
         >
           <option value="today">Today</option>
           <option value="tomorrow">Tomorrow</option>
@@ -214,7 +214,7 @@ export default function Roadmap() {
           onChange={(e) => setNewTask({ ...newTask, text: e.target.value })}
           onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
           placeholder="Add a task..."
-          className="flex-1 min-w-[200px] text-sm border border-ink-200 rounded-md px-3 py-1.5 bg-white text-ink-800 focus:outline-none focus:border-brand-500"
+          className="flex-1 min-w-[200px] text-sm border border-ink-200 dark:border-ink-700 rounded-md px-3 py-1.5 bg-white dark:bg-ink-900 text-ink-800 dark:text-ink-100 focus:outline-none focus:border-brand-500"
         />
         <button onClick={handleAddTask} className="btn-outline text-xs flex items-center gap-1">
           <Plus className="h-3.5 w-3.5" /> Add
@@ -269,7 +269,7 @@ export default function Roadmap() {
         <h2 className="font-semibold text-ink-900 mb-4">DSA Syllabus Checklist</h2>
         <div className="space-y-2">
           {topics.map((t) => (
-            <div key={t.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-ink-50 transition">
+            <div key={t.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-ink-50 dark:hover:bg-white/5 transition">
               <div className="flex items-center gap-3">
                 <div className={clsx('h-2.5 w-2.5 rounded-full', STATUS_DOT[t.status])} />
                 <div>
@@ -283,7 +283,7 @@ export default function Roadmap() {
               <select
                 value={t.status}
                 onChange={(e) => handleStatusChange(t.id, e.target.value as TopicStatus)}
-                className="text-xs border border-ink-200 rounded-md px-2 py-1 bg-white text-ink-700 focus:outline-none focus:border-brand-500"
+                className="text-xs border border-ink-200 dark:border-ink-700 rounded-md px-2 py-1 bg-white dark:bg-ink-900 text-ink-700 dark:text-ink-100 focus:outline-none focus:border-brand-500"
               >
                 {(Object.keys(STATUS_LABELS) as TopicStatus[]).map((s) => (
                   <option key={s} value={s}>{STATUS_LABELS[s]}</option>
@@ -358,7 +358,7 @@ function TaskSection({
             const Icon = TASK_STATUS_ICON[it.status]
             const isOverdue = it.carried_over && it.kind === 'today'
             return (
-              <div key={it.id} className="flex items-start gap-2 w-full text-left p-1.5 rounded-md hover:bg-white transition group">
+              <div key={it.id} className="flex items-start gap-2 w-full text-left p-1.5 rounded-md hover:bg-ink-50 dark:hover:bg-white/5 transition group">
                 <button
                   onClick={() => onCycle(it.id, cycle(it.status))}
                   className="flex-shrink-0 mt-0.5"

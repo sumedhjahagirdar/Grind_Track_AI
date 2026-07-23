@@ -162,7 +162,7 @@ export default function History() {
                       <p className="text-sm text-ink-700 whitespace-pre-wrap">{l.raw_input}</p>
                       {l.topics.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
-                          {l.topics.map((t, i) => <span key={i} className="chip bg-ink-100 text-ink-600">{t}</span>)}
+                          {l.topics.map((t, i) => <span key={i} className="chip bg-ink-100 dark:bg-ink-800 text-ink-600 dark:text-ink-300">{t}</span>)}
                         </div>
                       )}
                       {l.notes && <p className="text-xs text-ink-500 mt-2 italic">{l.notes}</p>}

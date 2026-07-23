@@ -280,9 +280,15 @@ export default function Analytics() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {Array.from(topicMap.entries()).sort((a, b) => b[1].count - a[1].count).map(([name, info]) => {
               const intensity = Math.min(4, Math.floor(info.count / 5))
-              const heatColors = ['bg-ink-100', 'bg-brand-100', 'bg-brand-200', 'bg-brand-300', 'bg-brand-500']
+              const heatStyles = [
+                'bg-ink-100 dark:bg-ink-800 text-ink-700 dark:text-ink-200',
+                'bg-brand-100 dark:bg-brand-900/40 text-brand-900 dark:text-brand-100',
+                'bg-brand-200 dark:bg-brand-800/50 text-brand-900 dark:text-brand-100',
+                'bg-brand-300 dark:bg-brand-700/60 text-brand-900 dark:text-white',
+                'bg-brand-500 dark:bg-brand-600 text-white',
+              ]
               return (
-                <div key={name} className={`rounded-lg p-3 ${heatColors[intensity]} ${intensity >= 3 ? 'text-white' : 'text-ink-800'}`}>
+                <div key={name} className={`rounded-lg p-3 ${heatStyles[intensity]}`}>
                   <div className="text-sm font-medium">{name}</div>
                   <div className="text-xs opacity-80">{info.count} solved</div>
                   {info.last && <div className="text-[10px] opacity-60 mt-0.5">Last: {format(new Date(info.last), 'MMM d')}</div>}

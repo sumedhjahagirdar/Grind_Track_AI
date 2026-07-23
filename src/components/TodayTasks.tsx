@@ -112,7 +112,7 @@ export default function TodayTasks() {
             const Icon = TASK_STATUS_ICON[t.status]
             const isOverdue = t.carried_over
             return (
-              <div key={t.id} className="flex items-start gap-2 p-1.5 rounded-md hover:bg-ink-50 transition group">
+              <div key={t.id} className="flex items-start gap-2 p-1.5 rounded-md hover:bg-ink-50 dark:hover:bg-white/5 transition group">
                 <button
                   onClick={() => handleCycle(t.id, cycleTaskStatus(t.status))}
                   className="flex-shrink-0 mt-0.5"

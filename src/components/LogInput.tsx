@@ -73,16 +73,16 @@ export default function LogInput({ onSaved, existingLogs }: Props) {
           <MessageSquare className="h-4 w-4 text-brand-600" />
           Today's Log
         </h2>
-        <div className="flex bg-ink-100 rounded-lg p-0.5">
+        <div className="flex bg-ink-100 dark:bg-white/5 rounded-lg p-0.5">
           <button
             onClick={() => setMode('chat')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition ${mode === 'chat' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500'}`}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition ${mode === 'chat' ? 'bg-white text-ink-900 shadow-sm dark:bg-ink-700 dark:text-ink-50' : 'text-ink-500 dark:text-ink-400'}`}
           >
             Chat
           </button>
           <button
             onClick={() => setMode('form')}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition ${mode === 'form' ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500'}`}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition ${mode === 'form' ? 'bg-white text-ink-900 shadow-sm dark:bg-ink-700 dark:text-ink-50' : 'text-ink-500 dark:text-ink-400'}`}
           >
             Form
           </button>

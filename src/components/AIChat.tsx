@@ -135,7 +135,7 @@ export default function AIChat() {
                 <button
                   key={p}
                   onClick={() => handleSend(p)}
-                  className="text-xs bg-ink-50 hover:bg-brand-50 hover:text-brand-700 text-ink-600 rounded-full px-3 py-1.5 transition border border-ink-100"
+                  className="text-xs bg-ink-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 text-ink-600 dark:text-ink-300 rounded-full px-3 py-1.5 transition border border-ink-100 dark:border-ink-700"
                 >
                   {p}
                 </button>
@@ -150,7 +150,7 @@ export default function AIChat() {
               'max-w-[80%] rounded-2xl px-4 py-2.5 text-sm',
               m.role === 'user'
                 ? 'bg-brand-600 text-white rounded-br-md'
-                : 'bg-ink-50 text-ink-800 rounded-bl-md border border-ink-100'
+                : 'bg-ink-50 dark:bg-white/5 text-ink-800 rounded-bl-md border border-ink-100 dark:border-ink-700'
             )}>
               {m.role === 'assistant' ? (
                 <FormattedMessage content={m.content} />
@@ -168,7 +168,7 @@ export default function AIChat() {
 
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-ink-50 text-ink-800 rounded-2xl rounded-bl-md border border-ink-100 px-4 py-3">
+            <div className="bg-ink-50 dark:bg-white/5 text-ink-800 rounded-2xl rounded-bl-md border border-ink-100 dark:border-ink-700 px-4 py-3">
               <Loader2 className="h-4 w-4 animate-spin text-ink-400" />
             </div>
           </div>
