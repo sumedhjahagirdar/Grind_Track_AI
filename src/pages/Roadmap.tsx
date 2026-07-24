@@ -54,6 +54,8 @@ export default function Roadmap() {
   const [newTask, setNewTask] = useState<{ kind: PlanKind; text: string }>({ kind: 'today', text: '' })
   const [recomputingTopics, setRecomputingTopics] = useState(false)
   const [recomputeMsg, setRecomputeMsg] = useState<string | null>(null)
+  const [editingTopicId, setEditingTopicId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -82,6 +84,18 @@ export default function Roadmap() {
   const handleStatusChange = async (id: string, status: TopicStatus) => {
     await updateTopic(id, { status })
     setTopics((prev) => prev.map((t) => t.id === id ? { ...t, status } : t))
+  }
+
+  const startEditSolved = (t: Topic) => {
+    setEditingTopicId(t.id)
+    setEditValue(String(t.questions_solved))
+  }
+
+  const saveEditSolved = async (id: string) => {
+    const n = Math.max(0, parseInt(editValue, 10) || 0)
+    setEditingTopicId(null)
+    await updateTopic(id, { questions_solved: n })
+    setTopics((prev) => prev.map((t) => t.id === id ? { ...t, questions_solved: n } : t))
   }
 
   const handleRecomputeTopics = async () => {
@@ -291,7 +305,7 @@ export default function Roadmap() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-semibold text-ink-900">DSA Syllabus Checklist</h2>
-            <p className="text-[11px] text-ink-400 mt-0.5">Coverage % is against an approximate total question count per topic — a reference point, not a live LeetCode sync.</p>
+            <p className="text-[11px] text-ink-400 mt-0.5">Coverage % uses real LeetCode tag totals. Click the "X solved" number to set it manually — daily logs will keep adding to it automatically after that.</p>
           </div>
           <button
             onClick={handleRecomputeTopics}
@@ -319,8 +333,28 @@ export default function Roadmap() {
                       </div>
                       <span className="text-xs text-ink-400 flex-shrink-0">
                         {pct < 1 && pct > 0 ? '<1' : pct.toFixed(0)}%
-                        {t.last_practiced_at && ` · last ${new Date(t.last_practiced_at).toLocaleDateString()}`}
                       </span>
+                      {editingTopicId === t.id ? (
+                        <input
+                          type="number"
+                          min={0}
+                          autoFocus
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={() => saveEditSolved(t.id)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') saveEditSolved(t.id); if (e.key === 'Escape') setEditingTopicId(null) }}
+                          className="w-14 text-xs border border-brand-400 rounded px-1 py-0.5 bg-white dark:bg-ink-900 text-ink-900 dark:text-ink-100 focus:outline-none flex-shrink-0"
+                        />
+                      ) : (
+                        <button
+                          onClick={() => startEditSolved(t)}
+                          title="Click to manually set solved count"
+                          className="text-xs text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 underline decoration-dotted underline-offset-2 flex-shrink-0"
+                        >
+                          {t.questions_solved} solved
+                        </button>
+                      )}
+                      {t.last_practiced_at && <span className="text-xs text-ink-400 flex-shrink-0">· last {new Date(t.last_practiced_at).toLocaleDateString()}</span>}
                     </div>
                   </div>
                 </div>
