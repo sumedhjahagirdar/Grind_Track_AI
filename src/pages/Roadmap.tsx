@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   fetchTopics, updateTopic, fetchPlanTasks, updatePlanTaskStatus,
-  createPlanTask, deletePlanTask, generateRecommendations, runDailyCarryOver, recomputeTopicTotals,
+  createPlanTask, deletePlanTask, generateRecommendations, runDailyCarryOver,
 } from '../lib/api'
 import { topicCoveragePercent } from '../lib/topicTotals'
 import type { Topic, PlanTask, TopicStatus, TaskStatus, PlanKind } from '../lib/types'
@@ -52,8 +52,6 @@ export default function Roadmap() {
   const [carryMsg, setCarryMsg] = useState<string | null>(null)
   const [missedDays, setMissedDays] = useState(0)
   const [newTask, setNewTask] = useState<{ kind: PlanKind; text: string }>({ kind: 'today', text: '' })
-  const [recomputingTopics, setRecomputingTopics] = useState(false)
-  const [recomputeMsg, setRecomputeMsg] = useState<string | null>(null)
   const [editingTopicId, setEditingTopicId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
 
@@ -96,25 +94,6 @@ export default function Roadmap() {
     setEditingTopicId(null)
     await updateTopic(id, { questions_solved: n })
     setTopics((prev) => prev.map((t) => t.id === id ? { ...t, questions_solved: n } : t))
-  }
-
-  const handleRecomputeTopics = async () => {
-    setRecomputingTopics(true)
-    setRecomputeMsg(null)
-    try {
-      const result = await recomputeTopicTotals()
-      if ('error' in result) {
-        setRecomputeMsg(`Failed: ${result.error}`)
-      } else {
-        setRecomputeMsg(`Fixed — ${result.topics_updated} topics recalculated from your log history.`)
-        const freshTopics = await fetchTopics()
-        setTopics(freshTopics)
-      }
-    } catch (e) {
-      setRecomputeMsg(e instanceof Error ? e.message : 'Failed to recompute')
-    } finally {
-      setRecomputingTopics(false)
-    }
   }
 
   const handleTaskStatusChange = async (id: string, status: TaskStatus) => {
@@ -302,22 +281,10 @@ export default function Roadmap() {
       </div>
 
       <div className="card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="font-semibold text-ink-900">DSA Syllabus Checklist</h2>
-            <p className="text-[11px] text-ink-400 mt-0.5">Coverage % uses real LeetCode tag totals. Click the "X solved" number to set it manually — daily logs will keep adding to it automatically after that.</p>
-          </div>
-          <button
-            onClick={handleRecomputeTopics}
-            disabled={recomputingTopics}
-            title="Rebuild topic totals fairly from your log history"
-            className="btn-outline text-xs px-2.5 py-1.5 flex-shrink-0"
-          >
-            {recomputingTopics ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-            Fix totals
-          </button>
+        <div className="mb-4">
+          <h2 className="font-semibold text-ink-900">DSA Syllabus Checklist</h2>
+          <p className="text-[11px] text-ink-400 mt-0.5">Coverage % uses real LeetCode tag totals. Click the "X solved" number to set it manually — daily logs will keep adding to it automatically after that.</p>
         </div>
-        {recomputeMsg && <div className="text-xs text-brand-600 dark:text-brand-400 mb-3">{recomputeMsg}</div>}
         <div className="space-y-2">
           {topics.map((t) => {
             const pct = topicCoveragePercent(t.name, t.questions_solved)
