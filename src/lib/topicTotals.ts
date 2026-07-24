@@ -3,8 +3,11 @@
 // several canonical topics here merge multiple LeetCode tags (e.g.
 // "Arrays & Strings" = Array + String tags combined), so treat these as
 // rough reference points for a coverage percentage, not exact figures.
+// "Arrays & Strings" is confirmed accurate as of Jul 2026 (Array: 2197 +
+// String: 880, from the user's own LeetCode tag page) — the rest are
+// rough estimates pending the same kind of confirmation.
 export const TOPIC_TOTALS: Record<string, number> = {
-  'Arrays & Strings': 1000,
+  'Arrays & Strings': 3077,
   'Recursion & Backtracking': 120,
   'Linked Lists': 80,
   'Stacks & Queues': 150,
