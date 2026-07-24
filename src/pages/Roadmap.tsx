@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   fetchTopics, updateTopic, fetchPlanTasks, updatePlanTaskStatus,
-  createPlanTask, deletePlanTask, generateRecommendations, runDailyCarryOver,
+  createPlanTask, deletePlanTask, generateRecommendations, runDailyCarryOver, recomputeTopicTotals,
 } from '../lib/api'
+import { topicCoveragePercent } from '../lib/topicTotals'
 import type { Topic, PlanTask, TopicStatus, TaskStatus, PlanKind } from '../lib/types'
 import {
   CheckCircle2, Circle, Loader2, RefreshCw, Plus, Trash2, AlertCircle, CalendarDays, CalendarRange, CalendarCheck, Calendar,
@@ -51,6 +52,8 @@ export default function Roadmap() {
   const [carryMsg, setCarryMsg] = useState<string | null>(null)
   const [missedDays, setMissedDays] = useState(0)
   const [newTask, setNewTask] = useState<{ kind: PlanKind; text: string }>({ kind: 'today', text: '' })
+  const [recomputingTopics, setRecomputingTopics] = useState(false)
+  const [recomputeMsg, setRecomputeMsg] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -79,6 +82,25 @@ export default function Roadmap() {
   const handleStatusChange = async (id: string, status: TopicStatus) => {
     await updateTopic(id, { status })
     setTopics((prev) => prev.map((t) => t.id === id ? { ...t, status } : t))
+  }
+
+  const handleRecomputeTopics = async () => {
+    setRecomputingTopics(true)
+    setRecomputeMsg(null)
+    try {
+      const result = await recomputeTopicTotals()
+      if ('error' in result) {
+        setRecomputeMsg(`Failed: ${result.error}`)
+      } else {
+        setRecomputeMsg(`Fixed — ${result.topics_updated} topics recalculated from your log history.`)
+        const freshTopics = await fetchTopics()
+        setTopics(freshTopics)
+      }
+    } catch (e) {
+      setRecomputeMsg(e instanceof Error ? e.message : 'Failed to recompute')
+    } finally {
+      setRecomputingTopics(false)
+    }
   }
 
   const handleTaskStatusChange = async (id: string, status: TaskStatus) => {
@@ -266,31 +288,54 @@ export default function Roadmap() {
       </div>
 
       <div className="card p-5">
-        <h2 className="font-semibold text-ink-900 mb-4">DSA Syllabus Checklist</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-semibold text-ink-900">DSA Syllabus Checklist</h2>
+            <p className="text-[11px] text-ink-400 mt-0.5">Coverage % is against an approximate total question count per topic — a reference point, not a live LeetCode sync.</p>
+          </div>
+          <button
+            onClick={handleRecomputeTopics}
+            disabled={recomputingTopics}
+            title="Rebuild topic totals fairly from your log history"
+            className="btn-outline text-xs px-2.5 py-1.5 flex-shrink-0"
+          >
+            {recomputingTopics ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+            Fix totals
+          </button>
+        </div>
+        {recomputeMsg && <div className="text-xs text-brand-600 dark:text-brand-400 mb-3">{recomputeMsg}</div>}
         <div className="space-y-2">
-          {topics.map((t) => (
-            <div key={t.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-ink-50 dark:hover:bg-white/5 transition">
-              <div className="flex items-center gap-3">
-                <div className={clsx('h-2.5 w-2.5 rounded-full', STATUS_DOT[t.status])} />
-                <div>
-                  <div className="text-sm font-medium text-ink-900">{t.name}</div>
-                  <div className="text-xs text-ink-400">
-                    {t.questions_solved} solved
-                    {t.last_practiced_at && ` · last ${new Date(t.last_practiced_at).toLocaleDateString()}`}
+          {topics.map((t) => {
+            const pct = topicCoveragePercent(t.name, t.questions_solved)
+            return (
+              <div key={t.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-ink-50 dark:hover:bg-white/5 transition">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={clsx('h-2.5 w-2.5 rounded-full flex-shrink-0', STATUS_DOT[t.status])} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-ink-900">{t.name}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="h-1.5 flex-1 max-w-[140px] rounded-full bg-ink-100 dark:bg-ink-800 overflow-hidden">
+                        <div className="h-full bg-brand-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, pct > 0 ? 3 : 0)}%` }} />
+                      </div>
+                      <span className="text-xs text-ink-400 flex-shrink-0">
+                        {pct < 1 && pct > 0 ? '<1' : pct.toFixed(0)}%
+                        {t.last_practiced_at && ` · last ${new Date(t.last_practiced_at).toLocaleDateString()}`}
+                      </span>
+                    </div>
                   </div>
                 </div>
+                <select
+                  value={t.status}
+                  onChange={(e) => handleStatusChange(t.id, e.target.value as TopicStatus)}
+                  className="text-xs border border-ink-200 dark:border-ink-700 rounded-md px-2 py-1 bg-white dark:bg-ink-900 text-ink-700 dark:text-ink-100 focus:outline-none focus:border-brand-500 flex-shrink-0 ml-3"
+                >
+                  {(Object.keys(STATUS_LABELS) as TopicStatus[]).map((s) => (
+                    <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                  ))}
+                </select>
               </div>
-              <select
-                value={t.status}
-                onChange={(e) => handleStatusChange(t.id, e.target.value as TopicStatus)}
-                className="text-xs border border-ink-200 dark:border-ink-700 rounded-md px-2 py-1 bg-white dark:bg-ink-900 text-ink-700 dark:text-ink-100 focus:outline-none focus:border-brand-500"
-              >
-                {(Object.keys(STATUS_LABELS) as TopicStatus[]).map((s) => (
-                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                ))}
-              </select>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 

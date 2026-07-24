@@ -268,6 +268,16 @@ export async function runDailyCarryOver(): Promise<CarryOverResult | { error: st
   return await res.json() as CarryOverResult
 }
 
+export async function recomputeTopicTotals(): Promise<{ topics_updated: number } | { error: string }> {
+  const headers = await getAuthHeaders()
+  const res = await fetch(`${FUNCTIONS_URL}/recompute-topics`, { method: 'POST', headers })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    return { error: body.error || `Request failed (${res.status})` }
+  }
+  return await res.json()
+}
+
 // ---------- LeetCode live calendar + sync ----------
 
 export async function fetchLeetcodeCalendar(limit = 400): Promise<LeetcodeCalendarEntry[]> {

@@ -13,10 +13,22 @@ Given a user's free-text daily activity log, extract structured data into EXACTL
 {
   "date": "YYYY-MM-DD" (use the provided date; if the user mentions a different date in text, use that),
   "leetcode": {
-    "easy_solved": number,
-    "medium_solved": number,
-    "hard_solved": number,
+    "easy_solved": number (TOTAL easy problems solved, across all topics),
+    "medium_solved": number (TOTAL medium problems solved, across all topics),
+    "hard_solved": number (TOTAL hard problems solved, across all topics),
     "topics": string[] (DSA topics touched, normalized to canonical names where possible: "Arrays & Strings","Recursion & Backtracking","Linked Lists","Stacks & Queues","Trees","Heaps / Priority Queues","Graphs","Dynamic Programming","Greedy Algorithms","Sliding Window / Two Pointers","Binary Search","Tries","Bit Manipulation","Sorting Algorithms","Math / Number Theory"),
+    "topic_breakdown": [{"topic": string, "easy": number, "medium": number, "hard": number}]
+      (CRITICAL: split the solved counts ACROSS the topics they actually belong to — do NOT
+      repeat the full easy/medium/hard totals under every topic. E.g. "solved 3 easy on Arrays
+      and 2 medium on Graphs" -> [{"topic":"Arrays & Strings","easy":3,"medium":0,"hard":0},
+      {"topic":"Graphs","easy":0,"medium":2,"hard":0}]. If the text solved N problems on a single
+      topic with no other topic mentioned, all N go to that one topic. If multiple topics are
+      mentioned together with no clear per-topic split stated (e.g. "solved 4 medium on Arrays and
+      Strings" — one combined topic, not two), attribute the full amount to that one matched
+      canonical topic, not divided further. Only split across DIFFERENT canonical topics when the
+      text actually distinguishes them (different sentences, "and also", separate topic+count
+      pairs). The sum of all topic_breakdown entries' easy/medium/hard should equal the top-level
+      easy_solved/medium_solved/hard_solved totals — never exceed them.),
     "difficulty_feedback": [{"topic": string, "note": string}] (topics the user found hard/easy, with their note)
   },
   "codeforces": {
@@ -43,6 +55,7 @@ interface ParseResult {
     medium_solved: number;
     hard_solved: number;
     topics: string[];
+    topic_breakdown: { topic: string; easy: number; medium: number; hard: number }[];
     difficulty_feedback: { topic: string; note: string }[];
   };
   codeforces: {
@@ -172,6 +185,21 @@ Deno.serve(async (req: Request) => {
     const easy = parsed.leetcode?.easy_solved ?? 0;
     const medium = parsed.leetcode?.medium_solved ?? 0;
     const hard = parsed.leetcode?.hard_solved ?? 0;
+    let breakdown = parsed.leetcode?.topic_breakdown ?? [];
+
+    // Safety net: if the model didn't return a breakdown (older prompt version,
+    // or it just omitted it), fall back to the old flat-topics behavior BUT
+    // split the total evenly across mentioned topics instead of repeating the
+    // full count for each one — avoids the "26 solved on Arrays" inflation bug.
+    if (breakdown.length === 0 && topics.length > 0) {
+      const n = topics.length;
+      breakdown = topics.map((topic: string) => ({
+        topic,
+        easy: Math.round(easy / n),
+        medium: Math.round(medium / n),
+        hard: Math.round(hard / n),
+      }));
+    }
 
     // Always insert a new row — multiple logs per day are allowed
     const insertData = {
@@ -193,17 +221,21 @@ Deno.serve(async (req: Request) => {
 
     if (insertErr) return jsonError(500, `Insert failed: ${insertErr.message}`);
 
-    // Update topic progress
-    for (const topicName of topics) {
+    // Update topic progress — using each topic's own share from the breakdown,
+    // not the full log total repeated per topic.
+    for (const entry of breakdown) {
+      const topicSolved = (entry.easy || 0) + (entry.medium || 0) + (entry.hard || 0);
+      if (topicSolved <= 0) continue;
+
       const { data: topicRow } = await dataClient
         .from("topics")
         .select("id, questions_solved, status")
         .eq("user_id", userId)
-        .eq("name", topicName)
+        .eq("name", entry.topic)
         .maybeSingle();
 
       if (topicRow) {
-        const newCount = (topicRow.questions_solved || 0) + (easy + medium + hard);
+        const newCount = (topicRow.questions_solved || 0) + topicSolved;
         const newStatus = newCount >= 15 ? "mastered" : newCount >= 5 ? "practiced" : "in_progress";
         await dataClient
           .from("topics")
