@@ -206,7 +206,7 @@ export default function Analytics() {
 
       <div className="card p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-ink-900">Questions solved (last 30 days)</h2>
+          <h2 className="font-semibold text-ink-900">{liveCalendar.length > 0 ? 'Submission activity (last 30 days)' : 'Questions solved (last 30 days)'}</h2>
           {liveCalendar.length > 0 ? (
             <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">Live from LeetCode</span>
           ) : (
@@ -221,7 +221,7 @@ export default function Analytics() {
             <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #eceef2', fontSize: 12 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {liveCalendar.length > 0 ? (
-              <Bar dataKey="live" stackId="a" fill="#19a874" name="Solved (live)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="live" stackId="a" fill="#19a874" name="Submissions (all attempts)" radius={[4, 4, 0, 0]} />
             ) : (
               <>
                 <Bar dataKey="easy" stackId="a" fill="#3cc590" name="Easy" />
@@ -233,7 +233,7 @@ export default function Analytics() {
         </ResponsiveContainer>
         {liveCalendar.length > 0 && (
           <p className="text-xs text-ink-500 mt-2">
-            Live data from LeetCode shows total submissions per day (difficulty split not available from the public API). Manual log entries fill gaps until the next sync.
+            <strong>This counts every submission attempt that day, not distinct problems solved</strong> — LeetCode's public API only exposes a raw submission count (wrong answers, re-runs, and retries all included), not an accepted-only daily breakdown. For your real solved count, trust the "LeetCode total" number at the top of this page instead — that one comes from your accepted-submission stats specifically.
           </p>
         )}
       </div>
