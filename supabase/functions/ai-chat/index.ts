@@ -88,7 +88,6 @@ async function callGemini(history: ChatMessage[], contextMsg: string): Promise<s
           generationConfig: {
             temperature: 0.6,
             maxOutputTokens: 2048,
-            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },

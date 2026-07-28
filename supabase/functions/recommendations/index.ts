@@ -107,7 +107,6 @@ async function callGemini(userMsg: string): Promise<RecommendationPayload> {
             temperature: 0.4,
             maxOutputTokens: 2048,
             responseMimeType: "application/json",
-            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },

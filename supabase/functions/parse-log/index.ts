@@ -110,7 +110,6 @@ async function callGemini(text: string, date: string): Promise<ParseResult> {
             temperature: 0.1,
             maxOutputTokens: 2048,
             responseMimeType: "application/json",
-            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },
