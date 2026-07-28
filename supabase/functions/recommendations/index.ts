@@ -107,6 +107,7 @@ async function callGemini(userMsg: string): Promise<RecommendationPayload> {
             temperature: 0.4,
             maxOutputTokens: 2048,
             responseMimeType: "application/json",
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },
@@ -114,9 +115,10 @@ async function callGemini(userMsg: string): Promise<RecommendationPayload> {
 
     if (res.ok) {
       const data = await res.json();
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const parts = data.candidates?.[0]?.content?.parts ?? [];
+      const content = parts.map((p: { text?: string }) => p.text ?? "").join("").trim();
       if (content) return extractJson(content) as RecommendationPayload;
-      lastError = "Empty response from Gemini";
+      lastError = `Empty response from Gemini (finishReason: ${data.candidates?.[0]?.finishReason ?? "unknown"})`;
       continue;
     }
 

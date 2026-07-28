@@ -87,7 +87,8 @@ async function callGemini(history: ChatMessage[], contextMsg: string): Promise<s
           contents,
           generationConfig: {
             temperature: 0.6,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },
@@ -95,9 +96,10 @@ async function callGemini(history: ChatMessage[], contextMsg: string): Promise<s
 
     if (res.ok) {
       const data = await res.json();
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const parts = data.candidates?.[0]?.content?.parts ?? [];
+      const content = parts.map((p: { text?: string }) => p.text ?? "").join("").trim();
       if (content) return extractText(content);
-      lastError = "Empty response from Gemini";
+      lastError = `Empty response from Gemini (finishReason: ${data.candidates?.[0]?.finishReason ?? "unknown"})`;
       continue;
     }
 

@@ -108,8 +108,9 @@ async function callGemini(text: string, date: string): Promise<ParseResult> {
           contents: [{ role: "user", parts: [{ text: userMsg }] }],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
             responseMimeType: "application/json",
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },
@@ -117,7 +118,8 @@ async function callGemini(text: string, date: string): Promise<ParseResult> {
 
     if (res.ok) {
       const data = await res.json();
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const parts = data.candidates?.[0]?.content?.parts ?? [];
+      const content = parts.map((p: { text?: string }) => p.text ?? "").join("").trim();
       if (content) {
         try {
           return extractJson(content) as ParseResult;
