@@ -112,7 +112,10 @@ function extractJson(text: string): unknown {
   const start = t.indexOf("{");
   const end = t.lastIndexOf("}");
   if (start === -1 || end === -1) throw new Error("No JSON in AI response");
-  return JSON.parse(t.slice(start, end + 1));
+  let jsonStr = t.slice(start, end + 1);
+  // Common, safe-to-fix LLM JSON quirk: trailing comma before a closing } or ]
+  jsonStr = jsonStr.replace(/,(\s*[}\]])/g, "$1");
+  return JSON.parse(jsonStr);
 }
 
 const GEMINI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.0-flash", "gemini-2.5-flash"];
@@ -153,7 +156,14 @@ async function callGemini(userMsg: string): Promise<RecommendationPayload> {
       const data = await res.json();
       const parts = data.candidates?.[0]?.content?.parts ?? [];
       const content = parts.map((p: { text?: string }) => p.text ?? "").join("").trim();
-      if (content) return extractJson(content) as RecommendationPayload;
+      if (content) {
+        try {
+          return extractJson(content) as RecommendationPayload;
+        } catch (parseErr) {
+          lastError = `JSON parse failed for model ${model}: ${(parseErr as Error).message}. Raw content (first 500 chars): ${content.slice(0, 500)}`;
+          continue;
+        }
+      }
       lastError = `Empty response from Gemini (finishReason: ${data.candidates?.[0]?.finishReason ?? "unknown"})`;
       continue;
     }
