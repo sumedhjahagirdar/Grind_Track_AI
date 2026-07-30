@@ -258,6 +258,11 @@ export async function deletePlanTask(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function clearAllPlanTasks(): Promise<void> {
+  const { error } = await supabase.from('plan_tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  if (error) throw error
+}
+
 export async function runDailyCarryOver(): Promise<CarryOverResult | { error: string }> {
   const headers = await getAuthHeaders()
   const res = await fetch(`${FUNCTIONS_URL}/daily-carryover`, { method: 'POST', headers })

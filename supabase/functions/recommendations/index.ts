@@ -7,6 +7,37 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+// Fixed topic sequence, agreed with the user — replaces open-ended AI topic
+// choice, which was causing it to circle back to already-comfortable topics
+// (Arrays & Strings, Linked Lists) instead of covering new ground. Arrays &
+// Strings is intentionally excluded — it was already underway before this
+// schedule was adopted, so it isn't part of the forward sequence.
+const TOPIC_ORDER = [
+  "Linked Lists",
+  "Recursion & Backtracking",
+  "Trees",
+  "Binary Search",
+  "Sliding Window / Two Pointers",
+  "Stacks & Queues",
+  "Heaps / Priority Queues",
+  "Graphs",
+  "Dynamic Programming",
+  "Greedy Algorithms",
+  "Sorting Algorithms",
+  "Bit Manipulation",
+  "Tries",
+  "Math / Number Theory",
+];
+const TOPIC_DONE_THRESHOLD = 5; // questions_solved to consider a topic "covered for this pass"
+
+function computeTopicSchedule(topicMap: { name: string; questions_solved: number }[]) {
+  const solvedByName = new Map(topicMap.map((t) => [t.name, t.questions_solved || 0]));
+  const focusIndex = TOPIC_ORDER.findIndex((name) => (solvedByName.get(name) || 0) < TOPIC_DONE_THRESHOLD);
+  const focus_topic = focusIndex === -1 ? "All scheduled topics covered — move to Hard problems and mock interviews" : TOPIC_ORDER[focusIndex];
+  const up_next_topics = focusIndex === -1 ? [] : TOPIC_ORDER.slice(focusIndex + 1, focusIndex + 4);
+  return { focus_topic, up_next_topics, full_order: TOPIC_ORDER };
+}
+
 const SYSTEM_PROMPT = `You are an AI study-planning engine for a CS engineering student preparing for placements through DSA and LeetCode.
 
 You receive:
@@ -14,6 +45,12 @@ You receive:
 - A topic-coverage map with statuses and question counts (the "structured_tracker" field) — this may be out of date; always reason from the raw logs first.
 - The user's stated goal and target date
 - Their latest LeetCode and Codeforces public profile stats
+
+CRITICAL — TOPIC SEQUENCING:
+The user follows a fixed, agreed-upon topic order (provided in the "topic_schedule" field of the input). This is not a suggestion — it exists specifically because leaving topic choice open-ended led to circling back to comfortable topics (Arrays, Linked Lists) instead of covering new ground.
+- "focus_topic" is the topic they should be actively working RIGHT NOW. tomorrow.topics_to_practice and this_week.topics_to_finish MUST center on focus_topic. You may include at most ONE revision problem from an earlier-covered topic if the logs show they're struggling with it — everything else must be focus_topic.
+- "up_next_topics" is the order to progress through after focus_topic is sufficiently covered (5+ questions solved). this_month.roadmap should walk through these in order, not jump around.
+- Do NOT recommend topics outside focus_topic / up_next_topics unless the user's raw logs explicitly show them asking about or working on something else — if so, treat that as a deliberate detour, mention it, but steer back to focus_topic for the following day.
 
 CRITICAL — SOURCE OF TRUTH:
 The user's free-text daily logs are the PRIMARY source of truth. If a log entry says they revised C++ STL or solved CodeChef problems, treat that as real progress even if the topic tracker shows "not_started" or solved counts are zero. Build your recommendations on what they actually did (per logs), not just the structured counters.
@@ -189,6 +226,7 @@ Deno.serve(async (req: Request) => {
     const userMsg = JSON.stringify({
       goal: settings?.goal_text ?? "placement-ready",
       target_date: settings?.target_date ?? null,
+      topic_schedule: computeTopicSchedule(topicMap),
       user_daily_log_entries: rawLogEntries,
       log_summary: {
         total_logs: (logs ?? []).length,

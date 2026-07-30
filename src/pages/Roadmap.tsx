@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   fetchTopics, updateTopic, fetchPlanTasks, updatePlanTaskStatus,
-  createPlanTask, deletePlanTask, generateRecommendations, runDailyCarryOver,
+  createPlanTask, deletePlanTask, clearAllPlanTasks, generateRecommendations, runDailyCarryOver,
 } from '../lib/api'
 import { topicCoveragePercent } from '../lib/topicTotals'
 import type { Topic, PlanTask, TopicStatus, TaskStatus, PlanKind } from '../lib/types'
@@ -124,6 +124,26 @@ export default function Roadmap() {
     setRegenerating(false)
   }
 
+  const handleResetAndRegenerate = async () => {
+    if (!confirm('This clears every existing Today/Tomorrow/This Week/This Month task and rebuilds your plan fresh from today, following the topic schedule. Continue?')) return
+    setRegenerating(true)
+    setRegenError(null)
+    try {
+      await clearAllPlanTasks()
+      const result = await generateRecommendations()
+      if ('error' in result) {
+        setRegenError(result.error)
+        setRegenerating(false)
+        return
+      }
+      await load()
+    } catch (e) {
+      setRegenError(e instanceof Error ? e.message : 'Failed to reset plan')
+    } finally {
+      setRegenerating(false)
+    }
+  }
+
   const handleAddTask = async () => {
     if (!newTask.text.trim()) return
     const scheduled = newTask.kind === 'tomorrow' ? tomorrowStr() : todayStr()
@@ -164,10 +184,16 @@ export default function Roadmap() {
           <h1 className="text-2xl font-bold text-ink-900">Roadmap</h1>
           <p className="text-sm text-ink-500">Today, tomorrow, this week, this month — auto-rescheduled</p>
         </div>
-        <button onClick={handleRegenerate} disabled={regenerating} className="btn-outline">
-          {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {regenerating ? 'Generating your plan…' : 'Regenerate plan'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleRegenerate} disabled={regenerating} className="btn-outline">
+            {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {regenerating ? 'Generating your plan…' : 'Regenerate plan'}
+          </button>
+          <button onClick={handleResetAndRegenerate} disabled={regenerating} title="Clear all existing tasks and rebuild from scratch, following the topic schedule" className="btn-outline text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 dark:border-red-800/50">
+            <Trash2 className="h-4 w-4" />
+            Reset &amp; regenerate
+          </button>
+        </div>
       </div>
 
       {regenError && (
