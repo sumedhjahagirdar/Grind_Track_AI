@@ -57,6 +57,11 @@ The user's free-text daily logs are the PRIMARY source of truth. If a log entry 
 
 Produce a JSON plan in EXACTLY this shape:
 {
+  "today": {
+    "leetcode_targets": {"easy": number, "medium": number, "hard": number},
+    "topics_to_practice": string[],
+    "learning_tasks": string[]
+  },
   "tomorrow": {
     "leetcode_targets": {"easy": number, "medium": number, "hard": number},
     "topics_to_practice": string[],
@@ -77,6 +82,7 @@ Produce a JSON plan in EXACTLY this shape:
 }
 
 Rules:
+- CRITICAL: "today" and "tomorrow" must NEVER be identical. "today" is what to do for the rest of today, continuing from wherever the user's most recent log left off (e.g. if they just finished problem A and B on a topic, today's remaining items are the NEXT problems in that topic, not A and B again). "tomorrow" is the day after — it should progress further still (either deeper into the same topic, or the next topic in the schedule if today's target is being met). Think of it as two consecutive, non-overlapping steps forward, not two copies of the same step.
 - Be specific and actionable. "Solve 2 medium Graph problems, revise BFS/DFS" not "practice graphs".
 - Build on what the logs show they already know — don't tell them to start from scratch if their logs show prior work.
 - Prioritize topics that are not_started or in_progress over ones already mastered, but consider topics they've already started (per logs) as in-progress even if the tracker says not_started.
@@ -85,6 +91,11 @@ Rules:
 - Return ONLY the JSON object, no markdown fences, no commentary.`;
 
 interface RecommendationPayload {
+  today: {
+    leetcode_targets: { easy: number; medium: number; hard: number };
+    topics_to_practice: string[];
+    learning_tasks: string[];
+  };
   tomorrow: {
     leetcode_targets: { easy: number; medium: number; hard: number };
     topics_to_practice: string[];
@@ -291,19 +302,25 @@ Deno.serve(async (req: Request) => {
     const tomorrowStr = tomorrowDate.toISOString().slice(0, 10);
     const todayStr = new Date().toISOString().slice(0, 10);
 
-    // Clear prior tomorrow/this_week/this_month plan_tasks (keep 'today' tasks — those carry over)
+    // Clear prior tomorrow/this_week/this_month plan_tasks entirely — these are always fully
+    // regenerated (nothing manual gets added to those kinds in the UI). For 'today', only clear
+    // AI-suggested tasks from a previous regenerate call (source = 'ai' and not carried over) —
+    // this leaves both the user's manually-added tasks (source = 'manual') and genuinely
+    // carried-over overdue tasks (carried_over = true, set by daily-carryover) untouched.
     await dataClient.from("plan_tasks").delete().eq("user_id", userId).in("kind", ["tomorrow", "this_week", "this_month"]);
+    await dataClient.from("plan_tasks").delete().eq("user_id", userId).eq("kind", "today").eq("source", "ai").or("carried_over.is.null,carried_over.eq.false");
 
-    const taskRows: { user_id: string; kind: string; text: string; scheduled_date: string }[] = [];
-    // Seed today's tasks from the tomorrow payload (so the user has tasks to do today)
-    for (const t of payload.tomorrow?.topics_to_practice ?? []) taskRows.push({ user_id: userId, kind: "today", text: `Practice: ${t}`, scheduled_date: todayStr });
-    for (const t of payload.tomorrow?.learning_tasks ?? []) taskRows.push({ user_id: userId, kind: "today", text: t, scheduled_date: todayStr });
-    // Tomorrow's tasks (same content, scheduled for tomorrow — these become today's tasks the day after)
-    for (const t of payload.tomorrow?.topics_to_practice ?? []) taskRows.push({ user_id: userId, kind: "tomorrow", text: `Practice: ${t}`, scheduled_date: tomorrowStr });
-    for (const t of payload.tomorrow?.learning_tasks ?? []) taskRows.push({ user_id: userId, kind: "tomorrow", text: t, scheduled_date: tomorrowStr });
-    for (const t of payload.this_week?.topics_to_finish ?? []) taskRows.push({ user_id: userId, kind: "this_week", text: `Finish: ${t}`, scheduled_date: todayStr });
-    if (payload.this_week?.milestone) taskRows.push({ user_id: userId, kind: "this_week", text: `Milestone: ${payload.this_week.milestone}`, scheduled_date: todayStr });
-    for (const t of payload.this_month?.roadmap ?? []) taskRows.push({ user_id: userId, kind: "this_month", text: t, scheduled_date: todayStr });
+    const taskRows: { user_id: string; kind: string; text: string; scheduled_date: string; source: string }[] = [];
+    // Today's tasks come from payload.today — genuinely different content from tomorrow now.
+    for (const t of payload.today?.topics_to_practice ?? []) taskRows.push({ user_id: userId, kind: "today", text: `Practice: ${t}`, scheduled_date: todayStr, source: "ai" });
+    for (const t of payload.today?.learning_tasks ?? []) taskRows.push({ user_id: userId, kind: "today", text: t, scheduled_date: todayStr, source: "ai" });
+    // Tomorrow's tasks come from payload.tomorrow, scheduled for tomorrow's date — these become
+    // today's tasks the day after, once daily-carryover/regenerate runs again.
+    for (const t of payload.tomorrow?.topics_to_practice ?? []) taskRows.push({ user_id: userId, kind: "tomorrow", text: `Practice: ${t}`, scheduled_date: tomorrowStr, source: "ai" });
+    for (const t of payload.tomorrow?.learning_tasks ?? []) taskRows.push({ user_id: userId, kind: "tomorrow", text: t, scheduled_date: tomorrowStr, source: "ai" });
+    for (const t of payload.this_week?.topics_to_finish ?? []) taskRows.push({ user_id: userId, kind: "this_week", text: `Finish: ${t}`, scheduled_date: todayStr, source: "ai" });
+    if (payload.this_week?.milestone) taskRows.push({ user_id: userId, kind: "this_week", text: `Milestone: ${payload.this_week.milestone}`, scheduled_date: todayStr, source: "ai" });
+    for (const t of payload.this_month?.roadmap ?? []) taskRows.push({ user_id: userId, kind: "this_month", text: t, scheduled_date: todayStr, source: "ai" });
 
     if (taskRows.length > 0) {
       const { error: taskInsertErr } = await dataClient.from("plan_tasks").insert(taskRows);

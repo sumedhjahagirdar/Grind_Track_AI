@@ -128,6 +128,7 @@ export interface PlanTask {
   scheduled_date: string
   original_date: string | null
   carried_over: boolean
+  source: 'ai' | 'manual'
   completed_at: string | null
   created_at: string
   updated_at: string

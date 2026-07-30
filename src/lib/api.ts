@@ -238,6 +238,7 @@ export async function createPlanTask(task: { kind: PlanTask['kind']; text: strin
       kind: task.kind,
       text: task.text,
       scheduled_date: task.scheduled_date ?? new Date().toISOString().slice(0, 10),
+      source: 'manual',
     })
     .select()
     .single()
