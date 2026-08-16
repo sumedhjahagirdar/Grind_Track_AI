@@ -30,12 +30,37 @@ const TOPIC_ORDER = [
 ];
 const TOPIC_DONE_THRESHOLD = 5; // questions_solved to consider a topic "covered for this pass"
 
+// Active sprint window, agreed 16/08: a compressed, deadline-bound version of
+// TOPIC_ORDER for 17 Aug - 1 Sept (before 3rd semester starts), with harder
+// daily pacing than the normal open-ended weekly cadence. Once sprint_end
+// passes, or once all sprint topics clear TOPIC_DONE_THRESHOLD, this stops
+// applying and the normal TOPIC_ORDER/focus_topic logic alone takes over.
+const SPRINT = {
+  start: "2026-08-17",
+  end: "2026-09-01",
+  blocks: [
+    { topic: "Recursion & Backtracking", days: "17-19 Aug", note: "Close out: Combination Sum, N-Queens (first Hard), Word Search" },
+    { topic: "Trees", days: "20-24 Aug", note: "Traversals -> BST -> LCA/Diameter -> Path Sum" },
+    { topic: "Binary Search", days: "25-27 Aug", note: "Classic search -> rotated array -> binary search on answer space" },
+    { topic: "Sliding Window / Two Pointers", days: "28-30 Aug", note: "Two pointers basics -> variable window problems" },
+    { topic: "Buffer / consolidation", days: "31 Aug-1 Sept", note: "Catch up, re-attempt 2-3 sprint problems cold (no notes)" },
+  ],
+};
+
 function computeTopicSchedule(topicMap: { name: string; questions_solved: number }[]) {
   const solvedByName = new Map(topicMap.map((t) => [t.name, t.questions_solved || 0]));
   const focusIndex = TOPIC_ORDER.findIndex((name) => (solvedByName.get(name) || 0) < TOPIC_DONE_THRESHOLD);
   const focus_topic = focusIndex === -1 ? "All scheduled topics covered — move to Hard problems and mock interviews" : TOPIC_ORDER[focusIndex];
   const up_next_topics = focusIndex === -1 ? [] : TOPIC_ORDER.slice(focusIndex + 1, focusIndex + 4);
   return { focus_topic, up_next_topics, full_order: TOPIC_ORDER };
+}
+
+function computeActiveSprint(todayStr: string) {
+  if (todayStr < SPRINT.start || todayStr > SPRINT.end) return null;
+  const daysRemaining = Math.max(0, Math.round(
+    (new Date(SPRINT.end).getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24),
+  ));
+  return { ...SPRINT, days_remaining_in_sprint: daysRemaining, today: todayStr };
 }
 
 const SYSTEM_PROMPT = `You are an AI study-planning engine for a CS engineering student preparing for placements through DSA and LeetCode.
@@ -51,6 +76,13 @@ The user follows a fixed, agreed-upon topic order (provided in the "topic_schedu
 - "focus_topic" is the topic they should be actively working RIGHT NOW. tomorrow.topics_to_practice and this_week.topics_to_finish MUST center on focus_topic. You may include at most ONE revision problem from an earlier-covered topic if the logs show they're struggling with it — everything else must be focus_topic.
 - "up_next_topics" is the order to progress through after focus_topic is sufficiently covered (5+ questions solved). this_month.roadmap should walk through these in order, not jump around.
 - Do NOT recommend topics outside focus_topic / up_next_topics unless the user's raw logs explicitly show them asking about or working on something else — if so, treat that as a deliberate detour, mention it, but steer back to focus_topic for the following day.
+
+CRITICAL — ACTIVE SPRINT (when "active_sprint" is present and non-null in the input):
+The user is in a time-bound, deadline-driven sprint (dates and per-block topic/day-count given in active_sprint.blocks). This OVERRIDES the normal relaxed weekly pacing — during a sprint:
+- Pace tomorrow/this_week more aggressively toward the day-count in the current block (e.g. a block spanning 5 days should target roughly 1-2 problems/day on that topic, not a loose "some this week").
+- this_week.milestone should reference the sprint block's deadline explicitly (e.g. "Finish Trees by 24 Aug per the sprint plan").
+- this_month.estimated_readiness should factor in active_sprint.days_remaining_in_sprint — flag "behind" or "at risk" honestly if the pace shown in recent logs won't clear the current block's topic before its day-range ends.
+- Once active_sprint is null (sprint window has passed) or absent, fall back to the normal relaxed pacing described above.
 
 CRITICAL — SOURCE OF TRUTH:
 The user's free-text daily logs are the PRIMARY source of truth. If a log entry says they revised C++ STL or solved CodeChef problems, treat that as real progress even if the topic tracker shows "not_started" or solved counts are zero. Build your recommendations on what they actually did (per logs), not just the structured counters.
@@ -248,6 +280,7 @@ Deno.serve(async (req: Request) => {
       goal: settings?.goal_text ?? "placement-ready",
       target_date: settings?.target_date ?? null,
       topic_schedule: computeTopicSchedule(topicMap),
+      active_sprint: computeActiveSprint(new Date().toISOString().slice(0, 10)),
       user_daily_log_entries: rawLogEntries,
       log_summary: {
         total_logs: (logs ?? []).length,
