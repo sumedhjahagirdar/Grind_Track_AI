@@ -10,23 +10,6 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [signupMode, setSignupMode] = useState(false)
-  const [forgotMode, setForgotMode] = useState(false)
-  const [resetSent, setResetSent] = useState(false)
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    })
-    setLoading(false)
-    if (resetErr) {
-      setError(resetErr.message)
-      return
-    }
-    setResetSent(true)
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,59 +46,6 @@ export default function Login() {
         </Reveal>
 
         <Reveal delay={100}>
-        {forgotMode ? (
-          <form onSubmit={handleForgotPassword} className="card p-6 space-y-4">
-            {resetSent ? (
-              <div className="text-center space-y-2 py-2">
-                <p className="text-sm font-medium text-ink-900">Check your inbox.</p>
-                <p className="text-xs text-ink-500">
-                  If an account exists for <strong>{email}</strong>, a password reset link is on its way.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => { setForgotMode(false); setResetSent(false); setError(null) }}
-                  className="text-xs text-brand-600 hover:text-brand-700 underline underline-offset-2"
-                >
-                  Back to sign in
-                </button>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <label className="label">Email</label>
-                  <input
-                    type="email"
-                    required
-                    autoFocus
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="input"
-                    placeholder="you@example.com"
-                  />
-                  <p className="text-xs text-ink-400 mt-1.5">We'll send a link to reset your password.</p>
-                </div>
-
-                {error && (
-                  <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-800/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">
-                    {error}
-                  </div>
-                )}
-
-                <button type="submit" disabled={loading} className="btn-primary w-full">
-                  {loading ? 'Sending…' : 'Send reset link'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setForgotMode(false); setError(null) }}
-                  className="w-full text-center text-xs text-ink-500 hover:text-ink-800 transition"
-                >
-                  Back to sign in
-                </button>
-              </>
-            )}
-          </form>
-        ) : (
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">
           <div>
             <label className="label">Email</label>
@@ -130,18 +60,7 @@ export default function Login() {
             />
           </div>
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="label !mb-0">Password</label>
-              {!signupMode && (
-                <button
-                  type="button"
-                  onClick={() => { setForgotMode(true); setError(null) }}
-                  className="text-[11px] text-brand-600 hover:text-brand-700 underline underline-offset-2"
-                >
-                  Forgot password?
-                </button>
-              )}
-            </div>
+            <label className="label">Password</label>
             <input
               type="password"
               required
@@ -154,7 +73,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-800/50 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+            <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -171,7 +90,6 @@ export default function Login() {
             {signupMode ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
           </button>
         </form>
-        )}
         </Reveal>
 
         <p className="mt-6 text-center text-[11px] text-ink-400 leading-relaxed">

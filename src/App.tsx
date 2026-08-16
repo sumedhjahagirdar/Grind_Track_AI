@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './lib/auth'
 import { ThemeProvider } from './lib/theme'
 import Login from './pages/Login'
-import ResetPassword from './pages/ResetPassword'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Analytics from './pages/Analytics'
@@ -31,7 +30,6 @@ export default function App() {
       <ThemeProvider>
         <Routes>
           <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/*" element={<ProtectedRoutes />}>
             <Route index element={<Dashboard />} />
             <Route path="analytics" element={<Analytics />} />
