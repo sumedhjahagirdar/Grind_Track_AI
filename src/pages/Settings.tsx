@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { fetchSettings, upsertSettings, fetchDailyLogs, fetchLeetcodeSnapshots, fetchCodeforcesSnapshots, syncLeetcode, syncCodeforces } from '../lib/api'
 import type { Settings as SettingsType } from '../lib/types'
-import { Loader2, Download, Save, RefreshCw, Check } from 'lucide-react'
+import { Loader2, Download, Save, RefreshCw, Check, Cpu } from 'lucide-react'
+import { listOllamaModels } from '../lib/ollama'
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SettingsType | null>(null)
@@ -19,6 +20,11 @@ export default function SettingsPage() {
   const [targetDate, setTargetDate] = useState('')
   const [aiProvider, setAiProvider] = useState('gemini')
   const [reminderTime, setReminderTime] = useState('')
+  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434')
+  const [ollamaModel, setOllamaModel] = useState('')
+  const [ollamaModels, setOllamaModels] = useState<string[]>([])
+  const [fetchingModels, setFetchingModels] = useState(false)
+  const [ollamaMsg, setOllamaMsg] = useState<string | null>(null)
 
   useEffect(() => {
     fetchSettings().then((s) => {
@@ -30,6 +36,8 @@ export default function SettingsPage() {
         setTargetDate(s.target_date ?? '')
         setAiProvider(s.ai_provider ?? 'gemini')
         setReminderTime(s.daily_reminder_time ?? '')
+        setOllamaUrl(s.ollama_url ?? 'http://localhost:11434')
+        setOllamaModel(s.ollama_model ?? '')
       }
       setLoading(false)
     }).catch(() => setLoading(false))
@@ -45,6 +53,8 @@ export default function SettingsPage() {
       target_date: targetDate || null,
       ai_provider: aiProvider,
       daily_reminder_time: reminderTime || null,
+      ollama_url: aiProvider === 'ollama' ? (ollamaUrl || 'http://localhost:11434') : null,
+      ollama_model: aiProvider === 'ollama' ? (ollamaModel || null) : null,
     })
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -66,6 +76,27 @@ export default function SettingsPage() {
     if ('error' in r) setCfSyncMsg(`Error: ${r.error}`)
     else setCfSyncMsg('Synced successfully!')
     setSyncingCf(false)
+  }
+
+  const handleFetchModels = async () => {
+    setFetchingModels(true); setOllamaMsg(null)
+    const result = await listOllamaModels(ollamaUrl)
+    if ('error' in result) {
+      setOllamaMsg(result.error)
+      setOllamaModels([])
+    } else {
+      const names = result.map((m) => m.name)
+      setOllamaModels(names)
+      if (names.length === 0) {
+        setOllamaMsg('No models found. Pull one with "ollama pull <name>" in a terminal.')
+      } else if (!names.includes(ollamaModel)) {
+        setOllamaModel(names[0])
+        setOllamaMsg(`Found ${names.length} model${names.length === 1 ? '' : 's'}. Auto-selected "${names[0]}".`)
+      } else {
+        setOllamaMsg(`Found ${names.length} model${names.length === 1 ? '' : 's'}.`)
+      }
+    }
+    setFetchingModels(false)
   }
 
   const handleExport = async (format: 'json' | 'csv') => {
@@ -137,22 +168,44 @@ export default function SettingsPage() {
           <select value={aiProvider} onChange={(e) => setAiProvider(e.target.value)} className="input max-w-[200px]">
             <option value="gemini">Gemini (Google)</option>
             <option value="claude">Claude (Anthropic)</option>
+            <option value="ollama">Ollama (local, unlimited)</option>
           </select>
-          <p className="text-[11px] text-ink-400 mt-1">API keys are managed server-side and never exposed in the browser.</p>
+          <p className="text-[11px] text-ink-400 mt-1">{aiProvider === 'ollama' ? 'Runs on your machine — no API key, no quota, no cost. Needs Ollama installed and running.' : 'API keys are managed server-side and never exposed in the browser.'}</p>
         </div>
 
-        <div>
-          <label className="label">Daily reminder time (optional)</label>
-          <input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} className="input max-w-[160px]" />
-        </div>
-
-        <div className="flex items-center gap-3 pt-2">
-          <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Save settings
-          </button>
-          {saved && <span className="text-sm text-brand-600 flex items-center gap-1"><Check className="h-4 w-4" /> Saved</span>}
-        </div>
+        {aiProvider === 'ollama' && (
+          <div className="rounded-lg bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200/60 dark:border-brand-800/40 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-brand-800 dark:text-brand-300">
+              <Cpu className="h-4 w-4" />
+              Local Ollama setup
+            </div>
+            <div>
+              <label className="label">Ollama server URL</label>
+              <input type="text" value={ollamaUrl} onChange={(e) => setOllamaUrl(e.target.value)} className="input" placeholder="http://localhost:11434" />
+              <p className="text-[11px] text-ink-400 mt-1">Default is http://localhost:11434. Change this only if Ollama is running on a different address.</p>
+            </div>
+            <div>
+              <label className="label">Model</label>
+              <div className="flex gap-2">
+                {ollamaModels.length > 0 ? (
+                  <select value={ollamaModel} onChange={(e) => setOllamaModel(e.target.value)} className="input flex-1">
+                    {ollamaModels.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                ) : (
+                  <input type="text" value={ollamaModel} onChange={(e) => setOllamaModel(e.target.value)} className="input flex-1" placeholder="e.g. llama3.1, qwen2.5, mistral" />
+                )}
+                <button type="button" onClick={handleFetchModels} disabled={fetchingModels} className="btn-outline text-xs whitespace-nowrap">
+                  {fetchingModels ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                  Fetch models
+                </button>
+              </div>
+              <p className="text-[11px] text-ink-400 mt-1">Click "Fetch models" to list models you've already pulled. Or type a name manually. Pull new ones with <code className="text-ink-600 dark:text-ink-300">ollama pull &lt;name&gt;</code> in a terminal.</p>
+            </div>
+            {ollamaMsg && (
+              <p className="text-xs text-ink-600 dark:text-ink-300 bg-white dark:bg-ink-800/50 rounded-md px-3 py-2 border border-ink-100 dark:border-ink-700">{ollamaMsg}</p>
+            )}
+          </div>
+        )}
       </form>
 
       <div className="card p-5">

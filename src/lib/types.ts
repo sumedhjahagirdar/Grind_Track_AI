@@ -163,6 +163,8 @@ export interface Settings {
   target_date: string | null
   ai_provider: string
   daily_reminder_time: string | null
+  ollama_url: string | null
+  ollama_model: string | null
   created_at: string
   updated_at: string
 }

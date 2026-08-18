@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { sendChatMessage, fetchChatMessages, clearChatMessages } from '../lib/api'
-import type { ChatMessage } from '../lib/types'
+import { sendChatMessage, fetchChatMessages, clearChatMessages, fetchSettings, saveChatExchange } from '../lib/api'
+import { sendOllamaChatMessage } from '../lib/ollama'
+import type { ChatMessage, Settings } from '../lib/types'
 import { Send, Loader2, Trash2, Sparkles } from 'lucide-react'
 import { format } from 'date-fns'
 import clsx from 'clsx'
@@ -19,18 +20,27 @@ export default function AIChat() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [clearing, setClearing] = useState(false)
+  const [settings, setSettings] = useState<Settings | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
     try {
-      const m = await fetchChatMessages(50)
+      const [m, s] = await Promise.all([fetchChatMessages(50), fetchSettings()])
       setMessages(m.reverse())
+      setSettings(s)
     } catch (e) {
       console.error(e)
     }
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  const provider = settings?.ai_provider ?? 'gemini'
+  const providerLabel = provider === 'ollama'
+    ? `Ollama · ${settings?.ollama_model || 'no model'}`
+    : provider === 'claude'
+    ? 'Powered by Claude'
+    : 'Powered by Gemini'
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -54,10 +64,15 @@ export default function AIChat() {
     setMessages((prev) => [...prev, optimistic])
     setLoading(true)
 
-    const result = await sendChatMessage(msg)
+    const result = provider === 'ollama'
+      ? await sendOllamaChatMessage(msg, settings, messages)
+      : await sendChatMessage(msg)
+
     if ('error' in result) {
       console.error('AI Coach request failed:', result.error)
-      const friendly = result.error.includes('429') || result.error.includes('quota') || result.error.includes('RESOURCE_EXHAUSTED')
+      const friendly = provider === 'ollama'
+        ? result.error
+        : result.error.includes('429') || result.error.includes('quota') || result.error.includes('RESOURCE_EXHAUSTED')
         ? 'AI coach is temporarily unavailable due to high demand. Please try again in a few minutes.'
         : result.error.includes('503') || result.error.toLowerCase().includes('overloaded')
         ? "Google's AI model is overloaded right now. This usually clears up within a minute — please try again."
@@ -75,6 +90,13 @@ export default function AIChat() {
         created_at: new Date().toISOString(),
       }
       setMessages((prev) => [...prev, assistant])
+      if (provider === 'ollama') {
+        try {
+          await saveChatExchange(msg, result.response)
+        } catch (e) {
+          console.error('Failed to save Ollama chat exchange:', e)
+        }
+      }
     }
     setLoading(false)
   }
@@ -109,7 +131,7 @@ export default function AIChat() {
           AI Coach
         </h2>
         <div className="flex items-center gap-3">
-          <span className="text-[11px] text-ink-400">Powered by Gemini</span>
+          <span className="text-[11px] text-ink-400">{providerLabel}</span>
           <button
             onClick={handleClear}
             disabled={clearing || loading || messages.length === 0}

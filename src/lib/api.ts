@@ -100,6 +100,14 @@ export async function clearChatMessages(): Promise<void> {
   if (error) throw error
 }
 
+export async function saveChatExchange(userMessage: string, assistantResponse: string): Promise<void> {
+  const { error } = await supabase.from('chat_messages').insert([
+    { role: 'user', content: userMessage },
+    { role: 'assistant', content: assistantResponse },
+  ])
+  if (error) throw error
+}
+
 export async function fetchDailyLogs(limit = 90): Promise<DailyLog[]> {
   const { data, error } = await supabase
     .from('daily_logs')
