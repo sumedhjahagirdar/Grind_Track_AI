@@ -206,6 +206,16 @@ export default function SettingsPage() {
             )}
           </div>
         )}
+
+        <button type="submit" disabled={saving} className="btn-primary">
+          {saving ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+          ) : saved ? (
+            <><Check className="h-4 w-4" /> Saved</>
+          ) : (
+            <><Save className="h-4 w-4" /> Save settings</>
+          )}
+        </button>
       </form>
 
       <div className="card p-5">
