@@ -125,8 +125,8 @@ export default function AIChat() {
 
   return (
     <div className="card p-0 flex flex-col h-[600px]">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-ink-100">
-        <h2 className="font-semibold text-ink-900 flex items-center gap-2">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-ink-100 dark:border-ink-800">
+        <h2 className="font-semibold text-ink-900 dark:text-ink-100 flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-brand-600" />
           AI Coach
         </h2>
@@ -147,7 +147,7 @@ export default function AIChat() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         {messages.length === 0 && !loading && (
           <div className="text-center py-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 mx-auto mb-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-900/30 mx-auto mb-3">
               <Sparkles className="h-6 w-6 text-brand-600" />
             </div>
             <p className="text-sm text-ink-600 font-medium mb-1">Ask your AI coach anything</p>
@@ -197,13 +197,13 @@ export default function AIChat() {
         )}
 
         {error && (
-          <div className="text-center text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          <div className="text-center text-xs text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-800/50 rounded-lg px-3 py-2">
             {error}
           </div>
         )}
       </div>
 
-      <div className="border-t border-ink-100 px-4 py-3">
+      <div className="border-t border-ink-100 dark:border-ink-800 px-4 py-3">
         <div className="flex gap-2">
           <input
             type="text"
