@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { parseAndSaveLog } from '../lib/api'
+import { useState, useEffect } from 'react'
+import { parseAndSaveLog, saveParsedLogClientSide, fetchSettings } from '../lib/api'
+import { parseLogWithOllama } from '../lib/ollama'
 import { format } from 'date-fns'
 import { Send, FileText, MessageSquare, Loader2 } from 'lucide-react'
-import type { DailyLog } from '../lib/types'
+import type { DailyLog, Settings } from '../lib/types'
 
 interface Props {
   onSaved: () => void
@@ -16,6 +17,7 @@ export default function LogInput({ onSaved, existingLogs }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [parseWarning, setParseWarning] = useState<string | null>(null)
+  const [settings, setSettings] = useState<Settings | null>(null)
 
   const [fEasy, setFEasy] = useState(0)
   const [fMedium, setFMedium] = useState(0)
@@ -25,15 +27,48 @@ export default function LogInput({ onSaved, existingLogs }: Props) {
   const [fDifficulty, setFDifficulty] = useState(0)
   const [fNotes, setFNotes] = useState('')
 
+  useEffect(() => {
+    fetchSettings().then(setSettings).catch(() => setSettings(null))
+  }, [])
+
+  const provider = settings?.ai_provider ?? 'gemini'
+
   const existing = existingLogs.find((l) => l.log_date === date)
   const countForDate = existingLogs.filter((l) => l.log_date === date).length
+
+  // Unified save path: Gemini parsing happens server-side (existing edge
+  // function). Ollama parsing has to happen client-side — Ollama runs on
+  // localhost, unreachable from a cloud edge function — so for that path we
+  // parse in the browser, then write to the database directly using the
+  // same insert/update logic the edge function uses for Gemini.
+  const saveLog = async (rawText: string): Promise<{ error: string } | { parse_error?: string | null }> => {
+    if (provider === 'ollama') {
+      const parsed = await parseLogWithOllama(rawText, date, settings)
+      if ('error' in parsed) {
+        // Still save the raw entry even if Ollama parsing failed, same
+        // fallback behavior as the Gemini path — never lose the user's text.
+        const saved = await saveParsedLogClientSide(rawText, date, {
+          leetcode: { easy_solved: 0, medium_solved: 0, hard_solved: 0, topics: [], topic_breakdown: [] },
+        })
+        if ('error' in saved) return { error: saved.error }
+        return { parse_error: parsed.error }
+      }
+      const saved = await saveParsedLogClientSide(rawText, date, parsed)
+      if ('error' in saved) return { error: saved.error }
+      return { parse_error: null }
+    }
+
+    const result = await parseAndSaveLog(rawText, date)
+    if ('error' in result) return { error: result.error }
+    return { parse_error: result.parse_error }
+  }
 
   const handleChatSubmit = async () => {
     if (!text.trim()) return
     setLoading(true)
     setError(null)
     setParseWarning(null)
-    const result = await parseAndSaveLog(text, date)
+    const result = await saveLog(text)
     setLoading(false)
     if ('error' in result) {
       setError(result.error)
@@ -53,7 +88,7 @@ export default function LogInput({ onSaved, existingLogs }: Props) {
     setParseWarning(null)
     const topics = fTopics.split(',').map((t) => t.trim()).filter(Boolean)
     const syntheticText = `Date: ${date}. Solved ${fEasy} easy, ${fMedium} medium, ${fHard} hard LeetCode questions. Topics: ${topics.join(', ') || 'none'}. Time: ${fTime} minutes. Difficulty rating: ${fDifficulty}/5. Notes: ${fNotes}`
-    const result = await parseAndSaveLog(syntheticText, date)
+    const result = await saveLog(syntheticText)
     setLoading(false)
     if ('error' in result) {
       setError(result.error)
@@ -72,6 +107,9 @@ export default function LogInput({ onSaved, existingLogs }: Props) {
         <h2 className="font-semibold text-ink-900 flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-brand-600" />
           Today's Log
+          <span className="text-[10px] font-normal text-ink-400 bg-ink-100 dark:bg-white/5 rounded-full px-2 py-0.5">
+            {provider === 'ollama' ? `Ollama · ${settings?.ollama_model || 'no model'}` : 'Gemini'}
+          </span>
         </h2>
         <div className="flex bg-ink-100 dark:bg-white/5 rounded-lg p-0.5">
           <button

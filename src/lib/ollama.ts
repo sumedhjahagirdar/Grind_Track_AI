@@ -92,6 +92,137 @@ async function buildContext(settings: Settings | null): Promise<string> {
   return JSON.stringify(contextData, null, 2)
 }
 
+const PARSE_SYSTEM_PROMPT = `You are a parsing engine for a DSA/LeetCode/Codeforces progress tracker.
+Given a user's free-text daily activity log, extract structured data into EXACTLY this JSON shape:
+
+{
+  "date": "YYYY-MM-DD" (use the provided date; if the user mentions a different date in text, use that),
+  "leetcode": {
+    "easy_solved": number (TOTAL easy problems solved, across all topics),
+    "medium_solved": number (TOTAL medium problems solved, across all topics),
+    "hard_solved": number (TOTAL hard problems solved, across all topics),
+    "topics": string[] (DSA topics touched, normalized to canonical names where possible: "Arrays & Strings","Recursion & Backtracking","Linked Lists","Stacks & Queues","Trees","Heaps / Priority Queues","Graphs","Dynamic Programming","Greedy Algorithms","Sliding Window / Two Pointers","Binary Search","Tries","Bit Manipulation","Sorting Algorithms","Math / Number Theory"),
+    "topic_breakdown": [{"topic": string, "easy": number, "medium": number, "hard": number}]
+      (CRITICAL: split the solved counts ACROSS the topics they actually belong to — do NOT
+      repeat the full easy/medium/hard totals under every topic. E.g. "solved 3 easy on Arrays
+      and 2 medium on Graphs" -> [{"topic":"Arrays & Strings","easy":3,"medium":0,"hard":0},
+      {"topic":"Graphs","easy":0,"medium":2,"hard":0}]. If the text solved N problems on a single
+      topic with no other topic mentioned, all N go to that one topic. If multiple topics are
+      mentioned together with no clear per-topic split stated, attribute the full amount to that
+      one matched canonical topic, not divided further. The sum of all topic_breakdown entries'
+      easy/medium/hard should equal the top-level totals — never exceed them.),
+    "difficulty_feedback": [{"topic": string, "note": string}]
+  },
+  "codeforces": {
+    "solved": number,
+    "contest_rating_change": number,
+    "topics": string[]
+  },
+  "learning": [{"resource_type": "youtube"|"course"|"book"|"article"|"other", "source": string, "topic": string, "units": string}],
+  "other_notes": string,
+  "raw_input": string
+}
+
+Rules:
+- If a number is not mentioned, use 0.
+- If a field is not mentioned, use an empty array or empty string as appropriate.
+- Do NOT invent topics not implied by the text.
+- Preserve the user's raw_input exactly as given.
+- Return ONLY the JSON object, no markdown fences, no commentary.`
+
+interface OllamaParseResult {
+  date: string
+  leetcode: {
+    easy_solved: number
+    medium_solved: number
+    hard_solved: number
+    topics: string[]
+    topic_breakdown: { topic: string; easy: number; medium: number; hard: number }[]
+    difficulty_feedback: { topic: string; note: string }[]
+  }
+  codeforces: { solved: number; contest_rating_change: number; topics: string[] }
+  learning: { resource_type: string; source: string; topic: string; units: string }[]
+  other_notes: string
+  raw_input: string
+}
+
+function extractJson(text: string): unknown {
+  let t = text.trim()
+  if (t.startsWith('```')) {
+    t = t.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '')
+  }
+  const start = t.indexOf('{')
+  const end = t.lastIndexOf('}')
+  if (start === -1 || end === -1) throw new Error('No JSON object found in Ollama response')
+  return JSON.parse(t.slice(start, end + 1))
+}
+
+/**
+ * Parses a free-text log entry into structured data using the user's local
+ * Ollama model, mirroring the parse-log edge function's Gemini-based schema
+ * exactly (including the per-topic breakdown fix) so both paths produce
+ * identical shapes downstream. Ollama runs on localhost, so this call — and
+ * the resulting database writes — must happen client-side; a cloud edge
+ * function has no way to reach the user's own machine.
+ */
+export async function parseLogWithOllama(
+  text: string,
+  date: string,
+  settings: Settings | null,
+): Promise<OllamaParseResult | { error: string }> {
+  const baseUrl = (settings?.ollama_url || DEFAULT_OLLAMA_URL).replace(/\/+$/, '')
+  const model = settings?.ollama_model
+  if (!model) return { error: 'No Ollama model selected. Set one in Settings.' }
+
+  const userMsg = `Date: ${date}\nUser log:\n${text}`
+
+  let res: Response
+  try {
+    res = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: PARSE_SYSTEM_PROMPT },
+          { role: 'user', content: userMsg },
+        ],
+        format: 'json',
+        stream: false,
+        options: { temperature: 0.1 },
+      }),
+    })
+  } catch {
+    const hint = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')
+      ? 'Could not reach your local Ollama server. Make sure Ollama is running and the URL in Settings matches.'
+      : `Could not reach the Ollama server at ${baseUrl}.`
+    return { error: hint }
+  }
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '')
+    if (res.status === 404) {
+      return { error: `Model "${model}" not found. Pull it first with "ollama pull ${model}".` }
+    }
+    return { error: `Ollama API error (${res.status}): ${errText.slice(0, 200)}` }
+  }
+
+  const data = await res.json().catch(() => null)
+  const content = data?.message?.content
+  if (!content) return { error: 'Ollama returned an empty response. Try again.' }
+
+  try {
+    const parsed = extractJson(content) as OllamaParseResult
+    parsed.raw_input = text
+    if (!parsed.leetcode) parsed.leetcode = { easy_solved: 0, medium_solved: 0, hard_solved: 0, topics: [], topic_breakdown: [], difficulty_feedback: [] }
+    if (!parsed.codeforces) parsed.codeforces = { solved: 0, contest_rating_change: 0, topics: [] }
+    if (!parsed.learning) parsed.learning = []
+    return parsed
+  } catch (e) {
+    return { error: `Failed to parse Ollama's response as JSON: ${e instanceof Error ? e.message : 'unknown error'}` }
+  }
+}
+
 export async function sendOllamaChatMessage(
   message: string,
   settings: Settings | null,

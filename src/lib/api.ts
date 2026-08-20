@@ -32,6 +32,93 @@ export async function parseAndSaveLog(text: string, date?: string): Promise<{ pa
   return { parsed: data.parsed, log: data.log, parse_error: data.parse_error ?? null }
 }
 
+/**
+ * Saves an already-parsed log entry directly from the client — used for the
+ * Ollama path, since parsing happens in the browser (Ollama runs on
+ * localhost, unreachable from a cloud edge function) but the actual
+ * database writes are identical to what parse-log does server-side for
+ * Gemini: insert the log row, then update each topic's solved count using
+ * its own share from topic_breakdown (not the full total repeated per
+ * topic — same fix as the Gemini path).
+ */
+export async function saveParsedLogClientSide(
+  text: string,
+  date: string,
+  parsed: {
+    leetcode: {
+      easy_solved: number
+      medium_solved: number
+      hard_solved: number
+      topics: string[]
+      topic_breakdown?: { topic: string; easy: number; medium: number; hard: number }[]
+    }
+  },
+): Promise<{ log: DailyLog } | { error: string }> {
+  const { data: userData, error: userErr } = await supabase.auth.getUser()
+  if (userErr || !userData.user) return { error: 'Not authenticated' }
+  const userId = userData.user.id
+
+  const topics = parsed.leetcode?.topics ?? []
+  const easy = parsed.leetcode?.easy_solved ?? 0
+  const medium = parsed.leetcode?.medium_solved ?? 0
+  const hard = parsed.leetcode?.hard_solved ?? 0
+  let breakdown = parsed.leetcode?.topic_breakdown ?? []
+
+  if (breakdown.length === 0 && topics.length > 0) {
+    const n = topics.length
+    breakdown = topics.map((topic) => ({
+      topic,
+      easy: Math.round(easy / n),
+      medium: Math.round(medium / n),
+      hard: Math.round(hard / n),
+    }))
+  }
+
+  const { data: dbRow, error: insertErr } = await supabase
+    .from('daily_logs')
+    .insert({
+      user_id: userId,
+      log_date: date,
+      raw_input: text,
+      parsed: parsed as unknown as Record<string, unknown>,
+      easy_solved: easy,
+      medium_solved: medium,
+      hard_solved: hard,
+      topics,
+    })
+    .select()
+    .single()
+
+  if (insertErr) return { error: `Insert failed: ${insertErr.message}` }
+
+  for (const entry of breakdown) {
+    const topicSolved = (entry.easy || 0) + (entry.medium || 0) + (entry.hard || 0)
+    if (topicSolved <= 0) continue
+
+    const { data: topicRow } = await supabase
+      .from('topics')
+      .select('id, questions_solved, status')
+      .eq('user_id', userId)
+      .eq('name', entry.topic)
+      .maybeSingle()
+
+    if (topicRow) {
+      const newCount = (topicRow.questions_solved || 0) + topicSolved
+      const newStatus = newCount >= 15 ? 'mastered' : newCount >= 5 ? 'practiced' : 'in_progress'
+      await supabase
+        .from('topics')
+        .update({
+          questions_solved: newCount,
+          last_practiced_at: date,
+          status: newStatus === 'mastered' && topicRow.status === 'mastered' ? 'mastered' : newStatus,
+        })
+        .eq('id', topicRow.id)
+    }
+  }
+
+  return { log: dbRow as DailyLog }
+}
+
 export async function generateRecommendations(): Promise<{ payload: RecommendationPayload } | { error: string }> {
   const headers = await getAuthHeaders()
   const res = await fetch(`${FUNCTIONS_URL}/recommendations`, {

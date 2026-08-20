@@ -133,7 +133,7 @@ async function callGemini(text: string, date: string): Promise<ParseResult> {
 
     const errText = await res.text();
     lastError = `Gemini API ${res.status} (${model}): ${errText}`;
-    if (res.status !== 429 && res.status !== 404 && res.status !== 400) break;
+    if (res.status !== 429 && res.status !== 404 && res.status !== 400 && res.status !== 503) break;
   }
 
   throw new Error(lastError || "All Gemini models exhausted");
