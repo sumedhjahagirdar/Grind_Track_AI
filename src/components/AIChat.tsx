@@ -217,7 +217,7 @@ export default function AIChat() {
           <button
             onClick={() => handleSend()}
             disabled={loading || !input.trim()}
-            className="btn-primary px-3"
+            className="btn-ai px-3"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </button>

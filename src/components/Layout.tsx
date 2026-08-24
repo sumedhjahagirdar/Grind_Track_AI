@@ -1,7 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { useTheme } from '../lib/theme'
-import AuroraBackground from './AuroraBackground'
 import { LayoutDashboard, BarChart3, Map, History, Settings as SettingsIcon, LogOut, Sparkles, Moon, Sun } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -26,13 +25,12 @@ export default function Layout() {
 
   return (
     <div className="relative min-h-screen flex bg-ink-50 dark:bg-ink-950">
-      <AuroraBackground />
-      <aside className="relative z-10 hidden md:flex w-60 flex-col border-r border-ink-100 bg-white dark:bg-ink-900/80 dark:backdrop-blur-xl dark:border-ink-800/70">
-        <div className="px-5 py-5 flex items-center gap-2 border-b border-ink-100 dark:border-ink-800">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-white font-bold text-sm">GT</div>
+      <aside className="hidden md:flex w-60 flex-col border-r border-ink-200/80 bg-ink-50 dark:bg-ink-950 dark:border-ink-800">
+        <div className="px-5 py-5 flex items-center gap-2 border-b border-ink-200/80 dark:border-ink-800">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-ink-900 dark:bg-white text-white dark:text-ink-900 font-bold text-sm">GT</div>
           <div>
-            <div className="font-display font-semibold text-sm text-gradient">GrindTrack AI</div>
-            <div className="text-[11px] text-ink-400">DSA Progress Tracker</div>
+            <div className="font-display font-semibold text-sm text-ink-900 dark:text-ink-100 tracking-tight">GrindTrack AI</div>
+            <div className="text-[11px] text-ink-500">DSA Progress Tracker</div>
           </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -45,8 +43,8 @@ export default function Layout() {
                 clsx(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
                   isActive
-                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300'
-                    : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100',
+                    ? 'bg-ink-100 text-ink-900 dark:bg-ink-800 dark:text-ink-100'
+                    : 'text-ink-500 hover:bg-ink-100 hover:text-ink-900 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100',
                 )
               }
             >
@@ -55,32 +53,32 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        <div className="px-3 py-3 border-t border-ink-100 dark:border-ink-800">
+        <div className="px-3 py-3 border-t border-ink-200/80 dark:border-ink-800">
           <button
             onClick={toggleTheme}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 hover:bg-ink-50 hover:text-ink-900 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100 transition"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-500 hover:bg-ink-100 hover:text-ink-900 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100 transition"
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             {theme === 'dark' ? 'Light mode' : 'Dark mode'}
           </button>
         </div>
-        <div className="px-3 py-4 border-t border-ink-100 dark:border-ink-800">
+        <div className="px-3 py-4 border-t border-ink-200/80 dark:border-ink-800">
           <div className="px-3 py-2 mb-2">
-            <div className="text-[11px] text-ink-400 uppercase tracking-wide">Signed in as</div>
+            <div className="text-[11px] text-ink-400 uppercase tracking-wider">Signed in as</div>
             <div className="text-xs text-ink-700 dark:text-ink-300 truncate">{user?.email}</div>
           </div>
-          <button onClick={handleSignOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-600 hover:bg-ink-50 hover:text-ink-900 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100 transition">
+          <button onClick={handleSignOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-500 hover:bg-ink-100 hover:text-ink-900 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-100 transition">
             <LogOut className="h-4 w-4" />
             Sign out
           </button>
         </div>
       </aside>
 
-      <div className="relative z-10 flex-1 flex flex-col min-w-0">
-        <header className="md:hidden sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-white/85 dark:bg-ink-900/70 backdrop-blur-xl border-b border-ink-100 dark:border-ink-800/70">
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="md:hidden sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-ink-50 dark:bg-ink-950 border-b border-ink-200/80 dark:border-ink-800">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white font-bold text-xs">GT</div>
-            <span className="font-display font-semibold text-sm text-gradient">GrindTrack AI</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900 dark:bg-white text-white dark:text-ink-900 font-bold text-xs">GT</div>
+            <span className="font-display font-semibold text-sm text-ink-900 dark:text-ink-100 tracking-tight">GrindTrack AI</span>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={toggleTheme} className="text-ink-500 dark:text-ink-400 hover:scale-110 transition-transform">
@@ -89,7 +87,7 @@ export default function Layout() {
             <button onClick={handleSignOut} className="text-ink-500 dark:text-ink-400 hover:scale-110 transition-transform"><LogOut className="h-4 w-4" /></button>
           </div>
         </header>
-        <div className="md:hidden sticky top-[52px] z-20 flex gap-1 px-3 py-2 bg-white/85 dark:bg-ink-900/70 backdrop-blur-xl border-b border-ink-100 dark:border-ink-800/70 overflow-x-auto">
+        <div className="md:hidden sticky top-[52px] z-20 flex gap-1 px-3 py-2 bg-ink-50 dark:bg-ink-950 border-b border-ink-200/80 dark:border-ink-800 overflow-x-auto">
           {nav.map((n) => (
             <NavLink
               key={n.to}
@@ -98,7 +96,7 @@ export default function Layout() {
               className={({ isActive }) =>
                 clsx(
                   'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors',
-                  isActive ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300' : 'text-ink-500 dark:text-ink-400',
+                  isActive ? 'bg-ink-100 text-ink-900 dark:bg-ink-800 dark:text-ink-100' : 'text-ink-500 dark:text-ink-400',
                 )
               }
             >

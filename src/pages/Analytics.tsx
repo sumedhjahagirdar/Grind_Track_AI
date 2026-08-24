@@ -215,13 +215,13 @@ export default function Analytics() {
         </div>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#eceef2" />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#67738d' }} interval={4} />
-            <YAxis tick={{ fontSize: 11, fill: '#67738d' }} allowDecimals={false} />
-            <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #eceef2', fontSize: 12 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#737373' }} interval={4} />
+            <YAxis tick={{ fontSize: 11, fill: '#737373' }} allowDecimals={false} />
+            <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E5E5', fontSize: 12 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {liveCalendar.length > 0 ? (
-              <Bar dataKey="live" stackId="a" fill="#19a874" name="Submissions (all attempts)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="live" stackId="a" fill="#6366F1" name="Submissions (all attempts)" radius={[4, 4, 0, 0]} />
             ) : (
               <>
                 <Bar dataKey="easy" stackId="a" fill="#3cc590" name="Easy" />
@@ -243,12 +243,12 @@ export default function Analytics() {
           <h2 className="font-semibold text-ink-900 mb-4">LeetCode growth over time</h2>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={lcData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#eceef2" />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#67738d' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#67738d' }} />
-              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #eceef2', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#737373' }} />
+              <YAxis tick={{ fontSize: 11, fill: '#737373' }} />
+              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E5E5', fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="total" stroke="#19a874" name="Total solved" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="total" stroke="#6366F1" name="Total solved" strokeWidth={2} dot={{ r: 3 }} />
               {latestLc?.contest_rating && <Line type="monotone" dataKey="rating" stroke="#f59e0b" name="Contest rating" strokeWidth={2} dot={{ r: 3 }} />}
             </LineChart>
           </ResponsiveContainer>
@@ -260,13 +260,13 @@ export default function Analytics() {
           <h2 className="font-semibold text-ink-900 mb-4">Codeforces growth over time</h2>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={cfData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#eceef2" />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#67738d' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#67738d' }} />
-              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #eceef2', fontSize: 12 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#737373' }} />
+              <YAxis tick={{ fontSize: 11, fill: '#737373' }} />
+              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E5E5', fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="rating" stroke="#3b82f6" name="Rating" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="solved" stroke="#19a874" name="Solved" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="solved" stroke="#6366F1" name="Solved" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>

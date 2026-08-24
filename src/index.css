@@ -18,37 +18,34 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Themed scrollbars — default browser bars look out of place against the
-   glass/aurora treatment. Falls back silently in browsers without
-   scrollbar-color/::-webkit-scrollbar support. */
+/* Slim, minimal scrollbars — matches the stark/minimal design system rather
+   than a heavier default browser bar. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d5d9e2 transparent;
+  scrollbar-color: #D4D4D4 transparent;
 }
 .dark * {
-  scrollbar-color: #3a4050 transparent;
+  scrollbar-color: #3F3F3F transparent;
 }
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: #d5d9e2;
+  background-color: #D4D4D4;
   border-radius: 9999px;
-  border: 2px solid transparent;
-  background-clip: content-box;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background-color: #3a4050;
+  background-color: #3F3F3F;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #b0b8c8;
+  background-color: #A3A3A3;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: #525c73;
+  background-color: #525252;
 }
 
 body {
@@ -68,59 +65,68 @@ body {
 }
 
 h1, h2, h3, h4, .font-display {
-  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.015em;
 }
 
-/* Gradient text utility for names/titles/emphasis, per the brand accent pair. */
+/* Gradient text — reserved for AI-specific elements only (AI Coach, AI
+   recommendations), used sparingly per the design system, not general
+   branding or every number on the page. */
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-brand-500 to-glow-500;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-glow-500;
 }
 
 @layer components {
+  /* Cards rely on a soft border, not heavy shadow or glass/blur. */
   .card {
-    @apply bg-white rounded-2xl shadow-card border border-ink-100
-      dark:bg-ink-900/70 dark:backdrop-blur-xl dark:border-ink-700/60;
+    @apply bg-white rounded-xl shadow-card border border-ink-200/80
+      dark:bg-ink-900 dark:border-ink-800;
   }
   .card-glass {
-    @apply rounded-2xl border backdrop-blur-xl transition-all duration-300
-      bg-white/70 border-ink-200/60 shadow-card
-      dark:bg-white/[0.04] dark:border-white/10 dark:shadow-none;
+    @apply rounded-xl border bg-white shadow-card border-ink-200/80
+      dark:bg-ink-900 dark:border-ink-800;
   }
   .card-hover {
-    @apply transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-card-hover dark:hover:shadow-glow-brand;
+    @apply transition-all duration-200 ease-out hover:-translate-y-[2px] hover:shadow-card-hover
+      hover:border-ink-300 dark:hover:border-ink-700;
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
-      transition-all duration-[250ms] ease-out disabled:opacity-50 disabled:cursor-not-allowed active:scale-[.97];
+      transition-all duration-150 ease-out disabled:opacity-50 disabled:cursor-not-allowed active:scale-95;
   }
+  /* Primary: solid, neutral — not colored. Inverts for dark mode. */
   .btn-primary {
-    @apply btn text-white bg-gradient-to-r from-brand-600 to-brand-500 bg-[length:160%_100%] bg-left
-      hover:bg-right hover:shadow-glow-brand;
-    transition-property: background-position, box-shadow, transform;
-    transition-duration: 350ms, 250ms, 150ms;
+    @apply btn bg-ink-900 text-white hover:bg-ink-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
+      dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100;
+  }
+  /* Reserved for AI-driven actions specifically (Regenerate, Ask AI, etc.) —
+     the one place a colored gradient appears, per the design system. */
+  .btn-ai {
+    @apply btn text-white bg-gradient-to-r from-brand-600 to-glow-600 hover:from-brand-500 hover:to-glow-500;
   }
   .btn-ghost {
-    @apply btn text-ink-700 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-white/10;
+    @apply btn text-ink-700 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800;
   }
   .btn-outline {
-    @apply btn border border-ink-200 text-ink-800 hover:bg-ink-50 hover:border-brand-400
-      dark:border-ink-700 dark:text-ink-200 dark:hover:bg-white/10 dark:hover:border-brand-500/60;
+    @apply btn border border-ink-200 text-ink-800 hover:bg-ink-50 hover:border-ink-300
+      dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800 dark:hover:border-ink-600;
   }
   .input {
     @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder-ink-400
-      focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all duration-200
+      focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all duration-150
       dark:bg-ink-900 dark:border-ink-700 dark:text-ink-100 dark:placeholder-ink-500
-      dark:focus:ring-brand-400/25 dark:focus:shadow-glow-brand;
+      dark:focus:ring-brand-400/25;
   }
   .label {
-    @apply block text-xs font-semibold text-ink-600 mb-1.5 uppercase tracking-wide dark:text-ink-400;
+    @apply block text-xs font-medium text-ink-500 mb-1.5 uppercase tracking-wider dark:text-ink-400;
   }
+  /* Badges/tags: rounded-md, not full pill — muted neutral by default. */
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium
+      bg-ink-100 text-ink-600 border border-ink-200/50 dark:bg-ink-800 dark:text-ink-300 dark:border-ink-700/50;
   }
   .icon-interactive {
-    @apply transition-all duration-200 ease-out group-hover:scale-110 group-hover:drop-shadow-[0_0_6px_rgba(25,168,116,0.5)];
+    @apply transition-transform duration-150 ease-out group-hover:scale-110;
   }
   .skeleton {
     @apply relative overflow-hidden bg-ink-100 dark:bg-ink-800 rounded-lg;
@@ -133,7 +139,7 @@ h1, h2, h3, h4, .font-display {
     transform: translateX(-100%);
   }
   .dark .skeleton::after {
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
   }
 }
 
@@ -153,27 +159,6 @@ h1, h2, h3, h4, .font-display {
   transform: translateY(0);
 }
 
-/* Aurora background: a few soft, slow-drifting glow blobs behind the app
-   shell, in both themes — light mode gets a much softer version (barely-
-   there tint) so it still feels alive without competing with readability. */
-.aurora-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.aurora-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(80px);
-  opacity: 0.07;
-  will-change: transform;
-}
-.dark .aurora-blob {
-  opacity: 0.22;
-}
-
 /* Respect reduced-motion: kill all decorative motion, keep the app fully usable. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -191,9 +176,9 @@ h1, h2, h3, h4, .font-display {
 /* Safety-net contrast overrides: several pages set text-ink-900/800/700/600
    directly (not just via the shared .card/.btn/.input classes above), for
    what was originally light-mode-only "dark text on light background"
-   styling. These hit real WCAG AA contrast on the dark background
-   (#13161f) rather than the previous approximations. Can be removed
-   page-by-page as each page gets proper dark: variants added directly. */
+   styling. These hit real WCAG AA contrast on the dark background rather
+   than the previous approximations. Can be removed page-by-page as each
+   page gets proper dark: variants added directly. */
 .dark [class*="text-ink-900"] { color: #F1F1F1; }
 .dark [class*="text-ink-800"] { color: #F1F1F1; }
 .dark [class*="text-ink-700"] { color: #E5E5E5; }

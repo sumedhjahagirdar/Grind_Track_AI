@@ -34,13 +34,13 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-ink-50 via-white to-brand-50 dark:from-ink-950 dark:via-ink-950 dark:to-ink-900">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-ink-50 dark:bg-ink-950">
       <div className="w-full max-w-sm">
         <Reveal>
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-glow-500 text-white font-bold shadow-glow-brand">GT</div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-ink-900 dark:bg-white text-white dark:text-ink-900 font-bold">GT</div>
             <div>
-              <h1 className="text-xl font-display font-bold text-gradient">GrindTrack AI</h1>
+              <h1 className="text-xl font-display font-bold text-ink-900 dark:text-ink-100 tracking-tight">GrindTrack AI</h1>
               <p className="text-xs text-ink-500">Your private DSA progress tracker</p>
             </div>
           </div>

@@ -160,7 +160,7 @@ function StatCard({ label, value, sub, icon, delay = 0 }: { label: string; value
           <span className="icon-interactive">{icon}</span>
           <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
         </div>
-        <div className="text-2xl font-display font-bold text-gradient">{value}</div>
+        <div className="text-2xl font-display font-bold text-ink-900">{value}</div>
         <div className="text-xs text-ink-500 mt-0.5">{sub}</div>
       </div>
     </Reveal>

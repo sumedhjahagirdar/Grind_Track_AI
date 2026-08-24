@@ -6,7 +6,7 @@ import {
 import { topicCoveragePercent } from '../lib/topicTotals'
 import type { Topic, PlanTask, TopicStatus, TaskStatus, PlanKind } from '../lib/types'
 import {
-  CheckCircle2, Circle, Loader2, RefreshCw, Plus, Trash2, AlertCircle, CalendarDays, CalendarRange, CalendarCheck, Calendar,
+  CheckCircle2, Circle, Loader2, RefreshCw, Plus, Trash2, AlertCircle, CalendarDays, CalendarRange, CalendarCheck, Calendar, Sparkles,
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -185,8 +185,8 @@ export default function Roadmap() {
           <p className="text-sm text-ink-500">Today, tomorrow, this week, this month — auto-rescheduled</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={handleRegenerate} disabled={regenerating} className="btn-outline">
-            {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          <button onClick={handleRegenerate} disabled={regenerating} className="btn-ai">
+            {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {regenerating ? 'Generating your plan…' : 'Regenerate plan'}
           </button>
           <button onClick={handleResetAndRegenerate} disabled={regenerating} title="Clear all existing tasks and rebuild from scratch, following the topic schedule" className="btn-outline text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 dark:border-red-800/50">
