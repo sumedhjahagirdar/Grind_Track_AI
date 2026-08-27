@@ -66,7 +66,10 @@ body {
 
 h1, h2, h3, h4, .font-display {
   font-family: 'Inter', system-ui, sans-serif;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
+}
+h1, .text-2xl.font-display, .text-3xl.font-display {
+  letter-spacing: -0.03em;
 }
 
 /* Gradient text — reserved for AI-specific elements only (AI Coach, AI
@@ -77,26 +80,29 @@ h1, h2, h3, h4, .font-display {
 }
 
 @layer components {
-  /* Cards rely on a soft border, not heavy shadow or glass/blur. */
+  /* Cards rely on a soft border, not heavy shadow or glass/blur. Dark mode
+     gets a subtle 1px inner top highlight for a touch of physical depth,
+     and a translucent (not solid) border — both barely-there by design. */
   .card {
     @apply bg-white rounded-xl shadow-card border border-ink-200/80
-      dark:bg-ink-900 dark:border-ink-800;
+      dark:bg-ink-900 dark:border-white/10 dark:shadow-inner-glow;
   }
   .card-glass {
     @apply rounded-xl border bg-white shadow-card border-ink-200/80
-      dark:bg-ink-900 dark:border-ink-800;
+      dark:bg-ink-900 dark:border-white/10 dark:shadow-inner-glow;
   }
   .card-hover {
     @apply transition-all duration-200 ease-out hover:-translate-y-[2px] hover:shadow-card-hover
-      hover:border-ink-300 dark:hover:border-ink-700;
+      hover:border-ink-300 dark:hover:border-white/20;
   }
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
       transition-all duration-150 ease-out disabled:opacity-50 disabled:cursor-not-allowed active:scale-95;
   }
-  /* Primary: solid, neutral — not colored. Inverts for dark mode. */
+  /* Primary: solid, neutral — not colored. Inverts for dark mode. Subtle
+     inner-top highlight gives it a tactile, lit-from-above feel. */
   .btn-primary {
-    @apply btn bg-ink-900 text-white hover:bg-ink-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
+    @apply btn bg-ink-900 text-white hover:bg-ink-800 shadow-btn-glow
       dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100;
   }
   /* Reserved for AI-driven actions specifically (Regenerate, Ask AI, etc.) —
@@ -114,6 +120,7 @@ h1, h2, h3, h4, .font-display {
   .input {
     @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder-ink-400
       focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none transition-all duration-150
+      focus:shadow-[0_0_12px_rgba(99,102,241,0.15)]
       dark:bg-ink-900 dark:border-ink-700 dark:text-ink-100 dark:placeholder-ink-500
       dark:focus:ring-brand-400/25;
   }

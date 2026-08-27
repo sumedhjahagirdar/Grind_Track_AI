@@ -55,6 +55,8 @@ export default {
       boxShadow: {
         card: '0 2px 8px rgba(0,0,0,0.04)',
         'card-hover': '0 4px 16px rgba(0,0,0,0.06)',
+        'inner-glow': 'inset 0 1px 0 0 rgba(255,255,255,0.05)',
+        'btn-glow': 'inset 0 1px 0 0 rgba(255,255,255,0.12)',
       },
       keyframes: {
         'fade-up': {
