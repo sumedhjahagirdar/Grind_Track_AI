@@ -2,11 +2,13 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   fetchTopics, updateTopic, fetchPlanTasks, updatePlanTaskStatus,
   createPlanTask, deletePlanTask, clearAllPlanTasks, generateRecommendations, runDailyCarryOver,
+  fetchStriverSections, updateStriverSection,
 } from '../lib/api'
 import { topicCoveragePercent } from '../lib/topicTotals'
-import type { Topic, PlanTask, TopicStatus, TaskStatus, PlanKind } from '../lib/types'
+import type { Topic, PlanTask, TopicStatus, TaskStatus, PlanKind, StriverSection } from '../lib/types'
+import { STRIVER_SHEET_URL } from '../lib/types'
 import {
-  CheckCircle2, Circle, Loader2, RefreshCw, Plus, Trash2, AlertCircle, CalendarDays, CalendarRange, CalendarCheck, Calendar, Sparkles,
+  CheckCircle2, Circle, Loader2, RefreshCw, Plus, Trash2, AlertCircle, CalendarDays, CalendarRange, CalendarCheck, Calendar, Sparkles, ExternalLink, BookOpen,
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -45,6 +47,9 @@ const tomorrowStr = () => {
 
 export default function Roadmap() {
   const [topics, setTopics] = useState<Topic[]>([])
+  const [striverSections, setStriverSections] = useState<StriverSection[]>([])
+  const [editingStriverId, setEditingStriverId] = useState<string | null>(null)
+  const [striverEditValue, setStriverEditValue] = useState('')
   const [tasks, setTasks] = useState<PlanTask[]>([])
   const [loading, setLoading] = useState(true)
   const [regenerating, setRegenerating] = useState(false)
@@ -71,9 +76,10 @@ export default function Roadmap() {
           setMissedDays(0)
         }
       }
-      const [t, p] = await Promise.all([fetchTopics(), fetchPlanTasks()])
+      const [t, p, s] = await Promise.all([fetchTopics(), fetchPlanTasks(), fetchStriverSections()])
       setTopics(t)
       setTasks(p)
+      setStriverSections(s)
     } catch (e) { console.error(e) } finally { setLoading(false) }
   }, [])
 
@@ -94,6 +100,21 @@ export default function Roadmap() {
     setEditingTopicId(null)
     await updateTopic(id, { questions_solved: n })
     setTopics((prev) => prev.map((t) => t.id === id ? { ...t, questions_solved: n } : t))
+  }
+
+  const startEditStriver = (s: StriverSection) => {
+    setEditingStriverId(s.id)
+    setStriverEditValue(String(s.solved_count))
+  }
+
+  const saveEditStriver = async (id: string) => {
+    const section = striverSections.find((s) => s.id === id)
+    const max = section?.total_problems ?? 9999
+    const n = Math.max(0, Math.min(max, parseInt(striverEditValue, 10) || 0))
+    setEditingStriverId(null)
+    const today = new Date().toISOString().slice(0, 10)
+    await updateStriverSection(id, { solved_count: n, last_practiced_at: today })
+    setStriverSections((prev) => prev.map((s) => s.id === id ? { ...s, solved_count: n, last_practiced_at: today } : s))
   }
 
   const handleTaskStatusChange = async (id: string, status: TaskStatus) => {
@@ -360,6 +381,73 @@ export default function Roadmap() {
                     <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                   ))}
                 </select>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-semibold text-ink-900 flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-brand-600" />
+              Striver A2Z Progress
+            </h2>
+            <p className="text-[11px] text-ink-400 mt-0.5">Locked-in resource. Click "X/Y solved" to update as you go through each section on the sheet.</p>
+          </div>
+          <a
+            href={STRIVER_SHEET_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-outline text-xs px-2.5 py-1.5 flex-shrink-0"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Open sheet
+          </a>
+        </div>
+        <div className="space-y-2">
+          {striverSections.map((s) => {
+            const pct = s.total_problems > 0 ? Math.min(100, (s.solved_count / s.total_problems) * 100) : 0
+            const done = s.solved_count >= s.total_problems && s.total_problems > 0
+            return (
+              <div key={s.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-ink-50 dark:hover:bg-white/5 transition">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={clsx('h-2.5 w-2.5 rounded-full flex-shrink-0', done ? 'bg-brand-500' : pct > 0 ? 'bg-amber-400' : 'bg-ink-300')} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-ink-900">{s.name}</span>
+                      <span className="text-[10px] uppercase tracking-wide text-ink-400 bg-ink-100 dark:bg-ink-800 rounded px-1.5 py-0.5 flex-shrink-0">{s.category}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="h-1.5 flex-1 max-w-[140px] rounded-full bg-ink-100 dark:bg-ink-800 overflow-hidden">
+                        <div className="h-full bg-brand-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, pct > 0 ? 3 : 0)}%` }} />
+                      </div>
+                      {editingStriverId === s.id ? (
+                        <input
+                          type="number"
+                          min={0}
+                          max={s.total_problems}
+                          autoFocus
+                          value={striverEditValue}
+                          onChange={(e) => setStriverEditValue(e.target.value)}
+                          onBlur={() => saveEditStriver(s.id)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') saveEditStriver(s.id); if (e.key === 'Escape') setEditingStriverId(null) }}
+                          className="w-14 text-xs border border-brand-400 rounded px-1 py-0.5 bg-white dark:bg-ink-900 text-ink-900 dark:text-ink-100 focus:outline-none flex-shrink-0"
+                        />
+                      ) : (
+                        <button
+                          onClick={() => startEditStriver(s)}
+                          title="Click to update how many you've solved in this section"
+                          className="text-xs text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 underline decoration-dotted underline-offset-2 flex-shrink-0"
+                        >
+                          {s.solved_count}/{s.total_problems} solved
+                        </button>
+                      )}
+                      {s.last_practiced_at && <span className="text-xs text-ink-400 flex-shrink-0">· last {new Date(s.last_practiced_at).toLocaleDateString()}</span>}
+                    </div>
+                  </div>
+                </div>
               </div>
             )
           })}

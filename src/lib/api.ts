@@ -4,8 +4,9 @@ import type {
   Recommendation, Topic, PlanItem, PlanTask, TaskStatus, Settings,
   RecommendationPayload, ParsedLog,
   LeetcodeCalendarEntry, LeetcodeSyncLogEntry, CarryOverResult,
+  StriverSection,
 } from './types'
-import { CANONICAL_TOPICS } from './types'
+import { CANONICAL_TOPICS, STRIVER_SECTIONS } from './types'
 
 async function getAuthHeaders() {
   const { data } = await supabase.auth.getSession()
@@ -238,6 +239,37 @@ export async function ensureTopicsSeeded(): Promise<void> {
   if (existing.length > 0) return
   const rows = CANONICAL_TOPICS.map((name, i) => ({ name, display_order: i }))
   const { error } = await supabase.from('topics').insert(rows)
+  if (error) throw error
+}
+
+export async function fetchStriverSections(): Promise<StriverSection[]> {
+  const { data, error } = await supabase
+    .from('striver_sections')
+    .select('*')
+    .order('order_index', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as StriverSection[]
+}
+
+export async function ensureStriverSectionsSeeded(): Promise<void> {
+  const existing = await fetchStriverSections()
+  if (existing.length > 0) return
+  const { data: userData, error: userErr } = await supabase.auth.getUser()
+  if (userErr || !userData.user) return
+  const rows = STRIVER_SECTIONS.map((s, i) => ({
+    user_id: userData.user.id,
+    name: s.name,
+    category: s.category,
+    total_problems: s.total,
+    solved_count: 0,
+    order_index: i,
+  }))
+  const { error } = await supabase.from('striver_sections').insert(rows)
+  if (error) throw error
+}
+
+export async function updateStriverSection(id: string, updates: Partial<StriverSection>): Promise<void> {
+  const { error } = await supabase.from('striver_sections').update(updates).eq('id', id)
   if (error) throw error
 }
 

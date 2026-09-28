@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { format } from 'date-fns'
 import {
   generateRecommendations, fetchDailyLogs, fetchRecommendation,
-  ensureTopicsSeeded, computeStreak, syncLeetcodeCalendar,
+  ensureTopicsSeeded, ensureStriverSectionsSeeded, computeStreak, syncLeetcodeCalendar,
 } from '../lib/api'
 import type { DailyLog, Recommendation, RecommendationPayload } from '../lib/types'
 import LogInput from '../components/LogInput'
@@ -24,6 +24,7 @@ export default function Dashboard() {
     setLoading(true)
     try {
       await ensureTopicsSeeded()
+      await ensureStriverSectionsSeeded()
       const [l, r] = await Promise.all([fetchDailyLogs(60), fetchRecommendation()])
       setLogs(l)
       setRec(r)

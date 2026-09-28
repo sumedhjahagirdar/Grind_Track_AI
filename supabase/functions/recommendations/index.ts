@@ -30,6 +30,28 @@ const TOPIC_ORDER = [
 ];
 const TOPIC_DONE_THRESHOLD = 5; // questions_solved to consider a topic "covered for this pass"
 
+// Maps this app's canonical topic names to Striver's A2Z sheet section names —
+// the user has locked in Striver's A2Z (takeuforward.org) as the single
+// resource going forward, so recommendations should point at a real section
+// name on that sheet, not invent arbitrary problem names disconnected from it.
+const STRIVER_SECTION_MAP: Record<string, string> = {
+  "Linked Lists": "Linked List",
+  "Recursion & Backtracking": "Recursion",
+  "Trees": "Binary Trees",
+  "Binary Search": "Binary Search",
+  "Sliding Window / Two Pointers": "Sliding Window / 2 Pointer",
+  "Stacks & Queues": "Stack / Queues",
+  "Heaps / Priority Queues": "Heaps",
+  "Graphs": "Graphs",
+  "Dynamic Programming": "Dynamic Programming",
+  "Greedy Algorithms": "Greedy Algorithms",
+  "Sorting Algorithms": "Sorting",
+  "Bit Manipulation": "Bit Manipulation",
+  "Tries": "Tries",
+  "Math / Number Theory": "Maths",
+};
+const STRIVER_SHEET_URL = "https://takeuforward.org/prep-hub/strivers-a2z-dsa-sheet?page=sheet";
+
 // Active sprint window, agreed 16/08: a compressed, deadline-bound version of
 // TOPIC_ORDER for 17 Aug - 1 Sept (before 3rd semester starts), with harder
 // daily pacing than the normal open-ended weekly cadence. Once sprint_end
@@ -52,7 +74,8 @@ function computeTopicSchedule(topicMap: { name: string; questions_solved: number
   const focusIndex = TOPIC_ORDER.findIndex((name) => (solvedByName.get(name) || 0) < TOPIC_DONE_THRESHOLD);
   const focus_topic = focusIndex === -1 ? "All scheduled topics covered — move to Hard problems and mock interviews" : TOPIC_ORDER[focusIndex];
   const up_next_topics = focusIndex === -1 ? [] : TOPIC_ORDER.slice(focusIndex + 1, focusIndex + 4);
-  return { focus_topic, up_next_topics, full_order: TOPIC_ORDER };
+  const striver_section = focusIndex === -1 ? null : (STRIVER_SECTION_MAP[TOPIC_ORDER[focusIndex]] ?? null);
+  return { focus_topic, up_next_topics, full_order: TOPIC_ORDER, striver_section, striver_sheet_url: STRIVER_SHEET_URL };
 }
 
 function computeActiveSprint(todayStr: string) {
@@ -76,6 +99,13 @@ The user follows a fixed, agreed-upon topic order (provided in the "topic_schedu
 - "focus_topic" is the topic they should be actively working RIGHT NOW. tomorrow.topics_to_practice and this_week.topics_to_finish MUST center on focus_topic. You may include at most ONE revision problem from an earlier-covered topic if the logs show they're struggling with it — everything else must be focus_topic.
 - "up_next_topics" is the order to progress through after focus_topic is sufficiently covered (5+ questions solved). this_month.roadmap should walk through these in order, not jump around.
 - Do NOT recommend topics outside focus_topic / up_next_topics unless the user's raw logs explicitly show them asking about or working on something else — if so, treat that as a deliberate detour, mention it, but steer back to focus_topic for the following day.
+
+CRITICAL — STRIVER A2Z IS THE LOCKED-IN RESOURCE:
+The user has committed to Striver's A2Z DSA sheet (takeuforward.org) as their single resource going forward and will not be switching. "topic_schedule.striver_section" gives the exact section name on that sheet matching the current focus_topic (e.g. focus_topic "Trees" -> striver_section "Binary Trees").
+- Every task in today/tomorrow/this_week that involves practicing problems MUST reference this Striver section by name — e.g. "Work through the next 3-4 problems in the 'Binary Trees' section on your Striver A2Z sheet" — NOT a list of specific invented LeetCode problem names or fabricated video titles.
+- Do not name specific individual problems or videos unless the user's own raw logs mention one by name (then you may reference back to what they already told you).
+- learning_tasks should point at watching the corresponding Striver video(s) for that section, phrased generically ("Watch the next unwatched video(s) in the '<section>' section"), not a fabricated specific video title.
+- If topic_schedule.striver_section is null (all topics covered), skip this instruction.
 
 CRITICAL — ACTIVE SPRINT (when "active_sprint" is present and non-null in the input):
 The user is in a time-bound, deadline-driven sprint (dates and per-block topic/day-count given in active_sprint.blocks). This OVERRIDES the normal relaxed weekly pacing — during a sprint:

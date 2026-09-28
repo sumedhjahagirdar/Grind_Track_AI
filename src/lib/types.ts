@@ -211,3 +211,44 @@ export const CANONICAL_TOPICS = [
   'Sorting Algorithms',
   'Math / Number Theory',
 ] as const
+
+// Striver's A2Z DSA sheet sections, in order, with real problem counts
+// verified directly from takeuforward.org (2026-09-25). 'category' matches
+// the site's own Basic/Core/Pro tiering.
+export const STRIVER_SECTIONS: { name: string; total: number; category: 'Basic' | 'Core' | 'Pro' }[] = [
+  { name: 'Beginner Problems', total: 83, category: 'Basic' },
+  { name: 'Sorting', total: 7, category: 'Basic' },
+  { name: 'Arrays', total: 32, category: 'Core' },
+  { name: 'Hashing', total: 6, category: 'Core' },
+  { name: 'Binary Search', total: 32, category: 'Core' },
+  { name: 'Strings (Basic and Medium)', total: 7, category: 'Core' },
+  { name: 'Recursion', total: 22, category: 'Core' },
+  { name: 'Linked List', total: 49, category: 'Core' },
+  { name: 'Bit Manipulation', total: 14, category: 'Core' },
+  { name: 'Greedy Algorithms', total: 14, category: 'Core' },
+  { name: 'Sliding Window / 2 Pointer', total: 13, category: 'Core' },
+  { name: 'Stack / Queues', total: 31, category: 'Core' },
+  { name: 'Binary Trees', total: 32, category: 'Core' },
+  { name: 'Binary Search Trees', total: 15, category: 'Core' },
+  { name: 'Heaps', total: 20, category: 'Core' },
+  { name: 'Graphs', total: 46, category: 'Pro' },
+  { name: 'Dynamic Programming', total: 53, category: 'Pro' },
+  { name: 'Tries', total: 7, category: 'Pro' },
+  { name: 'Strings (Advanced Algo)', total: 9, category: 'Pro' },
+  { name: 'Maths', total: 3, category: 'Pro' },
+]
+
+export const STRIVER_SHEET_URL = 'https://takeuforward.org/prep-hub/strivers-a2z-dsa-sheet?page=sheet'
+
+export interface StriverSection {
+  id: string
+  user_id: string
+  name: string
+  category: 'Basic' | 'Core' | 'Pro'
+  total_problems: number
+  solved_count: number
+  order_index: number
+  last_practiced_at: string | null
+  created_at: string
+  updated_at: string
+}
