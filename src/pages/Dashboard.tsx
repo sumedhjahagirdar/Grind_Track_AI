@@ -2,14 +2,15 @@ import { useEffect, useState, useCallback } from 'react'
 import { format } from 'date-fns'
 import {
   generateRecommendations, fetchDailyLogs, fetchRecommendation,
-  ensureTopicsSeeded, ensureStriverSectionsSeeded, computeStreak, syncLeetcodeCalendar,
+  ensureTopicsSeeded, ensureStriverSectionsSeeded, fetchStriverSections, computeStreak, syncLeetcodeCalendar,
 } from '../lib/api'
-import type { DailyLog, Recommendation, RecommendationPayload } from '../lib/types'
+import type { DailyLog, Recommendation, RecommendationPayload, StriverSection } from '../lib/types'
 import LogInput from '../components/LogInput'
 import TodayTasks from '../components/TodayTasks'
 import Reveal from '../components/Reveal'
 import RecommendationCard from '../components/RecommendationCard'
 import AIChat from '../components/AIChat'
+import StriverProgress from '../components/StriverProgress'
 import { Flame, TrendingUp, Target, Calendar, RefreshCw, Loader2 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -19,15 +20,17 @@ export default function Dashboard() {
   const [regenerating, setRegenerating] = useState(false)
   const [syncingLc, setSyncingLc] = useState(false)
   const [syncMsg, setSyncMsg] = useState<string | null>(null)
+  const [striverSections, setStriverSections] = useState<StriverSection[]>([])
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       await ensureTopicsSeeded()
       await ensureStriverSectionsSeeded()
-      const [l, r] = await Promise.all([fetchDailyLogs(60), fetchRecommendation()])
+      const [l, r, s] = await Promise.all([fetchDailyLogs(60), fetchRecommendation(), fetchStriverSections()])
       setLogs(l)
       setRec(r)
+      setStriverSections(s)
     } catch (e) {
       console.error(e)
     } finally {
@@ -116,6 +119,8 @@ export default function Dashboard() {
         <StatCard label="Day streak" value={streak} sub={streak > 0 ? 'Keep it up!' : 'Log today to start'} icon={<Flame className="h-4 w-4" />} delay={120} />
         <StatCard label="Logs total" value={logs.length} sub="entries logged" icon={<Calendar className="h-4 w-4" />} delay={180} />
       </div>
+
+      {striverSections.length > 0 && <StriverProgress sections={striverSections} />}
 
       {weekTargets && (
         <div className="card p-5">
